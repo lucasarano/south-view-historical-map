@@ -202,6 +202,26 @@ body.index-open .fix-link { left: 340px; }
 .card .links button { font-size: 13px; color: var(--grey); text-decoration: underline; text-decoration-color: var(--hair); text-underline-offset: 4px; }
 .card .links button:hover { color: var(--white); }
 
+/* Legend (bottom right): a small button that opens a short key */
+.legend-box { position: fixed; right: 22px; bottom: 22px; z-index: 5; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: none; }
+.legend-btn { pointer-events: auto; }
+.legend-btn { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px 0 11px; border: 1px solid var(--hair); border-radius: 999px; background: rgba(0,0,0,.6); font-size: 13px; color: var(--grey); transition: border-color .3s, color .3s; }
+.legend-btn svg { width: 15px; height: 15px; }
+.legend-btn:hover, .legend-btn[aria-expanded="true"] { color: var(--white); border-color: rgba(255,255,255,.35); }
+.legend-panel { width: 290px; max-height: calc(100vh - 160px); overflow: auto; padding: 4px 18px 14px; border: 1px solid var(--hair); border-radius: 14px; background: rgba(14,14,14,.94); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity .3s ease, transform .4s cubic-bezier(.16,1,.3,1); }
+.legend-box.open .legend-panel { opacity: 1; transform: none; pointer-events: auto; }
+.legend-panel h4 { margin: 14px 0 6px; font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--dim); }
+.legend-panel ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.legend-panel li { display: flex; align-items: center; gap: 10px; font-size: 13px; line-height: 1.35; color: #D6D6D2; }
+.legend-panel li svg { flex: none; width: 20px; height: 20px; fill: none; stroke: var(--white); stroke-width: 1.3; stroke-linejoin: round; }
+.legend-panel li svg .rose { stroke: var(--rose); stroke-width: 1.8; }
+.legend-panel p { margin: 0; font-size: 13px; line-height: 1.45; color: #D6D6D2; }
+.legend-panel .t2, body.reduced .legend-panel .t3 { display: none; }
+body.reduced .legend-panel .t2 { display: block; }
+.lg-badge { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 1.4px solid var(--rose); display: grid; place-items: center; font-size: 11px; color: var(--white); }
+body.exploring .year { bottom: 70px; }
+
 /* Time axis ticks */
 .tick { font-size: 12px; font-style: italic; color: var(--dim); letter-spacing: .04em; white-space: nowrap; pointer-events: none; }
 
@@ -231,6 +251,10 @@ body.index-open .fix-link { left: 340px; }
   .motion { height: 34px; padding: 0 10px; }
   .motion span { display: none; }
   .fix-link { display: none; }
+  .legend-box { top: 80px; bottom: auto; right: auto; left: 12px; flex-direction: column-reverse; align-items: flex-start; }
+  .legend-btn { height: 30px; }
+  .legend-panel { width: min(290px, calc(100vw - 24px)); max-height: 50vh; }
+  body.exploring .year { bottom: auto; }
   .fix { left: 10px; right: 10px; width: auto; bottom: 10px; }
   .index { top: 78px; left: 10px; right: 10px; bottom: auto; max-height: 70vh; width: auto; }
   .card, .card.open { position: fixed; left: 0; right: 0; bottom: 0; top: auto; width: auto; max-height: 46vh; overflow: auto; padding: 10px 18px calc(18px + env(safe-area-inset-bottom)); border-radius: 18px 18px 0 0; border: 0; border-top: 1px solid var(--hair); background: rgba(8,8,8,.94); transform: none !important; }
@@ -283,6 +307,35 @@ body.index-open .fix-link { left: 340px; }
 <div class="hint" id="hint">Follow an arrow to travel · Drag anything to move it · Scroll to zoom · <kbd>←</kbd> <kbd>→</kbd> earlier and later</div>
 <div class="hint explore-hint" id="explore-hint">Scroll to move through time · Drag to look around · Click anything to focus on it · <kbd>Esc</kbd> back</div>
 <div class="year" id="year" aria-live="polite"></div>
+
+<div class="legend-box" id="legend">
+  <div class="legend-panel" id="legend-panel" role="region" aria-label="How to read the map">
+    <h4>Shapes</h4>
+    <ul>
+      <li><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/></svg>A person</li>
+      <li><svg viewBox="0 0 20 20"><path d="M10 2.5 17.5 10 10 17.5 2.5 10Z"/></svg>An event</li>
+      <li><svg viewBox="0 0 20 20"><rect x="3.5" y="3.5" width="13" height="13"/></svg>A place</li>
+      <li><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" class="rose"/></svg>The one you selected</li>
+    </ul>
+    <h4>Connections</h4>
+    <ul>
+      <li><svg viewBox="0 0 20 20"><path d="M2 10h14M12.5 6.5 16 10l-3.5 3.5"/></svg>A documented connection; the arrow points to what it shaped</li>
+      <li><svg viewBox="0 0 20 20"><path d="M2 10h14" stroke-dasharray="2.5 2.5"/></svg>A connection still to verify</li>
+      <li><svg viewBox="0 0 20 20"><path d="M2 10h16" class="rose"/></svg>Connections of the one you selected</li>
+    </ul>
+    <h4>Ripple of influence</h4>
+    <ul>
+      <li><span class="lg-badge">1</span>How many steps each story is from the one you selected</li>
+    </ul>
+    <h4>Time</h4>
+    <p class="t3">Time runs in depth: recent years are in front, older ones further back.</p>
+    <p class="t2">Time runs left to right, from older to more recent.</p>
+  </div>
+  <button class="legend-btn" id="legend-btn" aria-expanded="false" aria-controls="legend-panel">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M8 7.2v4M8 4.8v.1" stroke-linecap="round"/></svg>
+    <span>Legend</span>
+  </button>
+</div>
 
 <button class="fix-link" id="fix-open">Something need correcting? <u>Send a request</u></button>
 <aside class="fix" id="fix" aria-label="Suggest a correction">

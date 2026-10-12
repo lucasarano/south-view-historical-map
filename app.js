@@ -283,7 +283,7 @@ const yearEl = document.getElementById('year');
 // The top bar, the hint line and the year readout: labels stay out from under them
 let chrome = null;
 function chromeRects() {
-  if (!chrome) chrome = ['.top', '#hint', '#explore-hint', '#year'].map(sel => document.querySelector(sel))
+  if (!chrome) chrome = ['.top', '#hint', '#explore-hint', '#year', '#legend-btn', '#fix-open', ...(legendEl.classList.contains('open') ? ['#legend-panel'] : [])].map(sel => document.querySelector(sel))
     .filter(el => el && getComputedStyle(el).display !== 'none')
     .map(el => { const r = el.getBoundingClientRect(); return { x1: r.left - 6, x2: r.right + 6, y1: r.top - 4, y2: r.bottom + 4 }; });
   return chrome;
@@ -837,6 +837,15 @@ const indexEl = document.getElementById('index'), menu = document.getElementById
 function openIndex() { indexEl.classList.add('open'); menu.setAttribute('aria-expanded', 'true'); document.body.classList.add('index-open'); }
 function closeIndex() { indexEl.classList.remove('open'); menu.setAttribute('aria-expanded', 'false'); document.body.classList.remove('index-open'); }
 
+/* ---------- Legend: starts as a small button, opens a short key ---------- */
+const legendEl = document.getElementById('legend'), legendBtn = document.getElementById('legend-btn');
+function setLegend(open) {
+  legendEl.classList.toggle('open', open);
+  legendBtn.setAttribute('aria-expanded', String(open));
+  chrome = null;                                       // labels make room for the open panel
+}
+legendBtn.onclick = () => setLegend(!legendEl.classList.contains('open'));
+
 /* ---------- Corrections: anyone can ask for a fix. In this prototype nothing is sent anywhere. ---------- */
 const fixEl = document.getElementById('fix'), fixAbout = document.getElementById('fix-about');
 fixAbout.innerHTML = '<option value="">The map in general</option>' + nodes.slice().sort((a, b) => a.year - b.year).map(n => `<option value="${n.id}">${n.name} (${dateOf(n)})</option>`).join('');
@@ -940,6 +949,7 @@ renderer.domElement.addEventListener('pointerup', e => {
 });
 addEventListener('keydown', e => {
   if (e.key === 'Escape' && fixEl.classList.contains('open')) return closeFix();
+  if (e.key === 'Escape' && legendEl.classList.contains('open')) return setLegend(false);
   if (e.key === 'Escape') { if (exploring()) setMode('focus'); else if (detail) { detail = false; renderCard(); syncUrl(); } return closeIndex(); }
   if (e.target.closest && e.target.closest('input, textarea, select')) return;
   if (e.key === '/') { e.preventDefault(); openIndex(); q.focus(); return; }
