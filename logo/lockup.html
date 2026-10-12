@@ -1,0 +1,13 @@
+<!doctype html><meta charset="utf-8"><style>
+@font-face{font-family:Libron;font-weight:700;src:url(../fonts/Libron-Bold.woff2)}
+@font-face{font-family:Libron;font-style:italic;font-weight:400;src:url(../fonts/Libron-Italic.woff2)}
+html,body{margin:0;background:transparent;font-family:Libron}
+.lock{display:inline-flex;align-items:center;gap:24px;padding:24px 32px 24px 24px}
+.lock img{width:150px}
+.w b{display:block;font-weight:700;font-size:58px;letter-spacing:.01em;line-height:1}
+.w i{display:block;font-size:38px;margin-top:8px}
+.dark .w b{color:#F2F2F0}.dark .w i{color:#9C9C98}
+.light .w b{color:#1A1915}.light .w i{color:#5E5E5B}
+</style>
+<div class="lock" id="l"><img id="m"><div class="w"><b>South-View</b><i>Historical Map</i></div></div>
+<script>const v=new URLSearchParams(location.search).get('v')||'dark';document.getElementById('l').className='lock '+v;document.getElementById('m').src='mark-'+v+'.svg';</script>

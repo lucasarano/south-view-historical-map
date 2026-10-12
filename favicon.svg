@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" role="img" aria-label="South-View Historical Map">
+  <path d="M12 27 L37 19 L63 27 L88 19 L88 73 L63 81 L37 73 L12 81 Z" fill="none" stroke="#F2F2F0" stroke-width="4.5" stroke-linejoin="round"/>
+  <path d="M37 19 V73 M63 27 V81" fill="none" stroke="#F2F2F0" stroke-width="2.5" opacity=".5"/>
+  <path d="M43 35 H57 L50 50 L57 65 H43 L50 50 Z" fill="none" stroke="#D43C67" stroke-width="3.4" stroke-linejoin="round"/>
+  <path d="M46.6 62.4 H53.4 L50 57.2 Z" fill="#D43C67"/>
+</svg>
