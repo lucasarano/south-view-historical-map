@@ -18,7 +18,10 @@ const TYPE = { person: 'Person', event: 'Event', place: 'Place' };
 const SEG = 48;                                      // ribbon segments
 const mobileQ = matchMedia('(max-width: 760px)');
 const isMobile = () => mobileQ.matches;
-const viewVec = () => VIEW.clone().multiplyScalar(isMobile() ? 1.9 : 1);   // phones need a wider shot
+const VIEW_2D = new THREE.Vector3(0, 0, 120);        // the flat graph is seen straight on
+const viewVec = () => (reduced ? VIEW_2D : VIEW).clone().multiplyScalar(isMobile() ? 1.9 : 1);   // phones need a wider shot
+// 2D layout: x is time (left = earlier), y comes from the data, nudged apart so no two shapes overlap
+const XS = 5, X2 = year => (year - 1950) * XS, YEAR_AT_X = x => 1950 + x / XS;
 
 const params = new URLSearchParams(location.search);
 let selected = params.get('select') || 'hamilton';
@@ -29,7 +32,10 @@ let detail = params.get('detail') === '1';
 let mode = 'focus';                                   // 'focus': one story at a time · 'explore': roam freely through time
 const exploring = () => mode === 'explore';
 const still = params.get('still') === '1';          // screenshot mode: skip easing, show the settled state
-const lr = k => (still ? 1 : k);
+// Reduced motion: no animation at all, and the map lies flat as a 2D graph (time runs left to right instead of in depth)
+let reduced = false;
+const calm = () => still || reduced;
+const lr = k => (calm() ? 1 : k);
 
 /* ---------- Graph ---------- */
 const byId = new Map(nodes.map(n => [n.id, n]));
@@ -48,7 +54,8 @@ function hopsFrom(id) {
 const stage = document.getElementById('stage');
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
-scene.fog = new THREE.FogExp2(0x000000, 0.0042);
+const FOG = new THREE.FogExp2(0x000000, 0.0042);   // the flat 2D graph has no depth, so no fog
+scene.fog = FOG;
 
 const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.5, 3000);
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
@@ -202,7 +209,7 @@ async function shotTexture(key, n) {
 const items = new Map();
 const pickables = [];
 nodes.forEach((n, i) => {
-  const pos = new THREE.Vector3(n.x, n.y, Z(n.year));
+  const p3 = new THREE.Vector3(n.x, n.y, Z(n.year)), p2 = new THREE.Vector3(X2(n.year), n.y, 0), pos = p3;
   const group = new THREE.Group();
   group.position.copy(pos);
   // Opaque black fill: anything behind a shape is hidden by it
@@ -227,16 +234,41 @@ nodes.forEach((n, i) => {
   scene.add(lbl);
 
   // sx/sy/sr: where the shape is drawn (it breathes). lx/ly/lr: its resting spot, which the overlay layout uses so it holds still.
-  items.set(n.id, { n, pos, group, fill, photo, line, halo, lbl, el, inner: el.firstChild, lw: 0, lh: 0, alpha: 0, phase: i * 0.7, sx: 0, sy: 0, sr: 0, lx: 0, ly: 0, lr: 0, bs: 1, vis: false, visT: -1e9, op: 0 });
+  items.set(n.id, { n, pos, p3, p2, group, fill, photo, line, halo, lbl, el, inner: el.firstChild, lw: 0, lh: 0, alpha: 0, phase: i * 0.7, sx: 0, sy: 0, sr: 0, lx: 0, ly: 0, lr: 0, bs: 1, vis: false, visT: -1e9, op: 0 });
 });
+
+// Spread the 2D spots apart vertically (x stays the year, so time is never distorted)
+{
+  const list = [...items.values()], GAP = 11;
+  for (let pass = 0; pass < 200; pass++) {
+    let moved = false;
+    for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
+      const a = list[i].p2, b = list[j].p2;
+      if (Math.abs(a.x - b.x) >= GAP) continue;
+      const dy = b.y - a.y, push = GAP - Math.abs(dy);
+      if (push > 0) { const sg = dy >= 0 ? 1 : -1; a.y -= sg * push / 2; b.y += sg * push / 2; moved = true; }
+    }
+    if (!moved) break;
+  }
+}
 
 /* ---------- Time axis: time only ever runs along z. A faint rail with a mark every decade makes that visible. ---------- */
 const AXIS = { x: -72, y: -46 };
-{
+const AXIS_2D_Y = Math.min(...[...items.values()].map(it => it.p2.y)) - 16;   // in 2D the rail runs along the bottom
+const railMat = new THREE.LineBasicMaterial({ color: WHITE, transparent: true, opacity: 0.16, depthWrite: false });
+const rail3 = (() => {
   const pts = [new THREE.Vector3(AXIS.x, AXIS.y, Z(1876)), new THREE.Vector3(AXIS.x, AXIS.y, Z(2032))];
   for (let y = 1880; y <= 2030; y += 10) pts.push(new THREE.Vector3(AXIS.x - 2.5, AXIS.y, Z(y)), new THREE.Vector3(AXIS.x + 2.5, AXIS.y, Z(y)));
-  scene.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: WHITE, transparent: true, opacity: 0.16, depthWrite: false })));
-}
+  return new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), railMat);
+})();
+const rail2 = (() => {
+  const pts = [new THREE.Vector3(X2(1876), AXIS_2D_Y, 0), new THREE.Vector3(X2(2032), AXIS_2D_Y, 0)];
+  for (let y = 1880; y <= 2030; y += 10) pts.push(new THREE.Vector3(X2(y), AXIS_2D_Y - 1.5, 0), new THREE.Vector3(X2(y), AXIS_2D_Y + 1.5, 0));
+  return new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), railMat.clone());
+})();
+rail2.material.opacity = 0.3;
+rail2.visible = false;
+scene.add(rail3, rail2);
 const ticks = [];
 for (let y = 1880; y <= 2030; y += 10) {
   const el = document.createElement('div');
@@ -245,7 +277,7 @@ for (let y = 1880; y <= 2030; y += 10) {
   const obj = new CSS2DObject(el);
   obj.position.set(AXIS.x - 9, AXIS.y, Z(y));
   scene.add(obj);
-  ticks.push({ el, year: y, pos: obj.position, w: 0, h: 0, vis: false, visT: -1e9, op: 0 });
+  ticks.push({ el, year: y, obj, pos: obj.position, w: 0, h: 0, vis: false, visT: -1e9, op: 0 });
 }
 const yearEl = document.getElementById('year');
 // The top bar, the hint line and the year readout: labels stay out from under them
@@ -303,7 +335,7 @@ function updateRibbon(L, opacity, tint = 0) {
   vC.addVectors(a, b).multiplyScalar(0.5).addScaledVector(vP, Math.min(len * L.bend, 22));
   const ra = SIZE[A.n.type] * A.group.scale.x, rb = SIZE[B.n.type] * B.group.scale.x;
   const u0 = Math.min(0.4, (ra * 1.05) / len), u1 = Math.max(0.6, 1 - (rb * 1.35) / len);
-  const w0 = ra * 0.62;                               // starts near the source's full width
+  const w0 = ra * (reduced ? 0.3 : 0.62);             // starts near the source's full width (slimmer in the flat 2D graph, where links run long)
   const pos = L.mesh.geometry.attributes.position.array, col = L.mesh.geometry.attributes.color.array;
   for (let k = 0; k <= SEG; k++) {
     const v = k / SEG, u = u0 + (u1 - u0) * v;
@@ -357,6 +389,7 @@ let flight = null;
 const ease = t => t * t * t * (t * (6 * t - 15) + 10);      // smootherstep
 let zoomGoal = null;                                 // distance from the focus; set on first frame
 function flyTo(id, dur = 2200, fromFar = false) {
+  if (calm()) { dur = 1; fromFar = false; }          // reduced motion: jump straight there
   const target = items.get(id).pos.clone();
   const toP = target.clone().add(viewVec().setLength(zoomGoal ?? viewVec().length()));
   const fromP = fromFar ? toP.clone().add(new THREE.Vector3(30, 40, 420)) : camera.position.clone();
@@ -370,12 +403,13 @@ function zoomBy(f) {
 const Z_MIN = Z(1876), Z_MAX = Z(2032), XY_MAX = 130;
 let exploreGoal = null;
 const EXPLORE_VIEW = new THREE.Vector3(0, 16, 125);  // fixed: Explore never tilts
-const exploreView = () => EXPLORE_VIEW.clone().multiplyScalar(isMobile() ? 1.7 : 1);
+const exploreView = () => (reduced ? VIEW_2D.clone().multiplyScalar(1.25) : EXPLORE_VIEW.clone()).multiplyScalar(isMobile() ? 1.7 : 1);
 function moveExplore(dx, dy, dz) {
   if (!exploreGoal) exploreGoal = controls.target.clone();
-  exploreGoal.x = Math.max(-XY_MAX, Math.min(XY_MAX, exploreGoal.x + dx));
+  const [x0, x1] = reduced ? [X2(1876), X2(2032)] : [-XY_MAX, XY_MAX];   // in 2D, x is the time range
+  exploreGoal.x = Math.max(x0, Math.min(x1, exploreGoal.x + dx));
   exploreGoal.y = Math.max(-XY_MAX, Math.min(XY_MAX, exploreGoal.y + dy));
-  exploreGoal.z = Math.max(Z_MIN, Math.min(Z_MAX, exploreGoal.z + dz));
+  exploreGoal.z = reduced ? 0 : Math.max(Z_MIN, Math.min(Z_MAX, exploreGoal.z + dz));
 }
 // Pan by screen pixels, without ever changing the year in view
 function panExplore(px, py) {
@@ -384,7 +418,9 @@ function panExplore(px, py) {
   const up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1).setZ(0).normalize();
   moveExplore(-(right.x * px - up.x * py) * wpp, -(right.y * px - up.y * py) * wpp, 0);
 }
-const travelYears = years => moveExplore(0, 0, years * DEPTH);    // later in time is further forward, along +z
+// Later in time is further forward (+z), or further right in the 2D graph
+const travelYears = years => (reduced ? moveExplore(years * XS, 0, 0) : moveExplore(0, 0, years * DEPTH));
+const focusYearNow = () => (reduced ? YEAR_AT_X(controls.target.x) : YEAR_AT(controls.target.z));
 // Listen on the whole stage so scrolling works over labels and pills too (but let the expanded card scroll itself)
 stage.addEventListener('wheel', e => {
   if (card.contains(e.target)) return;
@@ -447,11 +483,13 @@ function renderCard() {
       <ul class="legend">${legend}</ul>
       <p class="reach">${reach}</p>
     </div>
+    <div class="links"><a href="https://southviewcemetery.com/" target="_blank" rel="noopener">Learn more at South-View ↗</a><small>sample link</small><button id="card-fix">Suggest a correction</button></div>
     <p class="draft">Draft · South-View reviews every story before publication.</p>`
     : `<div class="rip simple"><b class="h">Ripple of influence</b><p class="reach">${reach}</p></div>
     ${isMobile() ? connList('mob-conns', 'Travel to') : ''}`}`;
   card.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { radius = +b.dataset.r; renderCard(); syncUrl(); });
   card.querySelectorAll('.conn').forEach(b => b.onclick = () => select(b.dataset.id));
+  card.querySelector('#card-fix')?.addEventListener('click', () => openFix(selected));
   card.querySelector('#name').onclick = card.querySelector('#cue').onclick = () => { detail = !detail; renderCard(); syncUrl(); };
 }
 function fadeCardIn() {
@@ -502,7 +540,7 @@ function renderShots() {
     mesh.userData.shot = true;
     scene.add(mesh);
     shotTexture(m, n).then(tex => { mesh.material.map = tex; mesh.material.needsUpdate = true; mesh.visible = true; });
-    return { mesh, delay: (still ? 0 : 1500) + i * 220, t0 };
+    return { mesh, delay: calm() ? 0 : 1500 + i * 220, t0 };
   });
   // The node and everything it connects to directly show their own photo inside their outline
   for (const id of [selected, ...adj.get(selected).map(e => e.id)]) {
@@ -515,7 +553,7 @@ function updateShots(now) {
   const S = items.get(selected);
   for (const sh of shots) {
     const age = now - sh.t0 - sh.delay;
-    const target = age > 0 ? Math.min(1, age / 900) * S.alpha : 0;
+    const target = age > 0 ? (calm() ? 1 : Math.min(1, age / 900)) * S.alpha : 0;
     sh.mesh.material.opacity += (target - sh.mesh.material.opacity) * lr(0.15);
   }
 }
@@ -558,7 +596,7 @@ const rectsHit = (a, b) => a.x1 < b.x2 && a.x2 > b.x1 && a.y1 < b.y2 && a.y2 > b
 const visibleDiscs = () => [...items.values()].filter(it => it.alpha > 0.12 && it.n.id !== selected);
 // While the index is open on a large screen, overlay pieces stay to its right
 const leftEdge = () => (!isMobile() && indexEl.classList.contains('open') ? indexEl.getBoundingClientRect().right + 16 : 24);
-const settle = (dt, ms) => 1 - Math.exp(-dt / ms);   // frame-rate independent easing factor
+const settle = (dt, ms) => (calm() ? 1 : 1 - Math.exp(-dt / ms));   // frame-rate independent easing factor
 // A shown/hidden choice must hold for a moment before it flips, so nothing blinks while the view moves
 function hold(o, want, now, ms = 350) {
   if (want !== o.vis && now - o.visT > ms) { o.vis = want; o.visT = now; }
@@ -594,6 +632,14 @@ function solveArrows(S, blocks) {
     return { a, x: s.x + d.dx * L, y: s.y + d.dy * L, dx: d.dx, dy: d.dy, off: d.off };
   });
   const box = p => ({ x1: p.x - p.a.w / 2 - 6, x2: p.x + p.a.w / 2 + 6, y1: p.y - p.a.h / 2 - 6, y2: p.y + p.a.h / 2 + 6 });
+  // Move a pill out of a rectangle by the shortest way
+  const pushOut = (p, o) => {
+    const b = box(p);
+    if (!rectsHit(b, o)) return;
+    const upD = b.y2 - o.y1, downD = o.y2 - b.y1, leftD = b.x2 - o.x1, rightD = o.x2 - b.x1;
+    const m = Math.min(upD, downD, leftD, rightD);
+    if (m === upD) p.y -= upD + 2; else if (m === downD) p.y += downD + 2; else if (m === leftD) p.x -= leftD + 2; else p.x += rightD + 2;
+  };
   const discs = visibleDiscs();
   for (let it = 0; it < 30; it++) {
     for (let i = 0; i < placed.length; i++) for (let j = i + 1; j < placed.length; j++) {
@@ -602,13 +648,7 @@ function solveArrows(S, blocks) {
       if (ox > 0 && oy > 0) { const d = (oy / 2 + 1) * (A.y <= B.y ? -1 : 1); A.y += d; B.y -= d; }
     }
     for (const p of placed) {
-      for (const o of blocks) {
-        const b = box(p);
-        if (!rectsHit(b, o)) continue;
-        const upD = b.y2 - o.y1, downD = o.y2 - b.y1, leftD = b.x2 - o.x1, rightD = o.x2 - b.x1;
-        const m = Math.min(upD, downD, leftD, rightD);
-        if (m === upD) p.y -= upD + 2; else if (m === downD) p.y += downD + 2; else if (m === leftD) p.x -= leftD + 2; else p.x += rightD + 2;
-      }
+      for (const o of blocks) pushOut(p, o);
       for (const d of discs.concat([{ lx: s.x, ly: s.y, lr: S.lr * 1.6, n: {} }])) {
         const r = d.lr * (within(d.n.id) ? 1.6 : 1.25) + 4;
         if (rectHitsDisc(box(p), d.lx, d.ly, r)) {
@@ -638,6 +678,7 @@ function solveArrows(S, blocks) {
       const ox = (A.a.w + B.a.w) / 2 + 8 - Math.abs(A.x - B.x), oy = (A.a.h + B.a.h) / 2 + 8 - Math.abs(A.y - B.y);
       if (ox > 0 && oy > 0) { const d = (oy / 2 + 1) * (A.y <= B.y ? -1 : 1); A.y += d; B.y -= d; }
     }
+    for (const p of placed) pushOut(p, blocks[0]);    // the card always wins: a pill never sits on top of it
   }
   // Re-express what's on screen in the new solve's scale, so switching solves never jumps
   const k = solvedR ? S.lr / solvedR : 1;
@@ -714,30 +755,54 @@ function drawRipple(now) {
 }
 
 /* ---------- Select ---------- */
-function syncUrl() { history.replaceState(null, '', `?select=${selected}&radius=${radius}${detail ? '&detail=1' : ''}${exploring() ? '&mode=explore' : ''}`); }
+function syncUrl() { history.replaceState(null, '', `?select=${selected}&radius=${radius}${detail ? '&detail=1' : ''}${exploring() ? '&mode=explore' : ''}${reduced ? '&motion=reduced' : ''}`); }
 const modeBtns = { focus: document.getElementById('mode-focus'), explore: document.getElementById('mode-explore') };
 function setMode(m, quiet = false) {
   if (m === mode) return;
   mode = m;
   document.body.classList.toggle('exploring', exploring());
   for (const [k, b] of Object.entries(modeBtns)) { b.classList.toggle('on', k === mode); b.setAttribute('aria-pressed', String(k === mode)); }
-  controls.enableRotate = !exploring();              // in Explore, dragging moves the view instead of tilting it
-  if (exploring()) {
-    // Always the same centered, straight-on view, whatever angle Focus was left at
-    const c = new THREE.Vector3();
-    for (const it of items.values()) c.add(it.pos);
-    c.divideScalar(items.size).setZ(controls.target.z);
-    exploreGoal = c.clone();
-    flight = { t0: performance.now(), dur: still ? 1 : 1400, fromT: controls.target.clone(), toT: c, fromP: camera.position.clone(), toP: c.clone().add(exploreView()) };
-  }
+  controls.enableRotate = !exploring() && !reduced;   // in Explore (and in 2D), dragging never tilts the view
+  if (exploring()) centerExplore();
   else { exploreGoal = null; if (!quiet) { fadeCardIn(); flyTo(selected); } }
   if (!quiet) syncUrl();
 }
+// Always the same centered, straight-on view, whatever angle Focus was left at; the year in view is kept
+function centerExplore(year = focusYearNow()) {
+  const c = new THREE.Vector3();
+  for (const it of items.values()) c.add(it.pos);
+  c.divideScalar(items.size);
+  if (reduced) c.setX(X2(year)).setZ(0); else c.setZ(Z(year));
+  exploreGoal = c.clone();
+  flight = { t0: performance.now(), dur: calm() ? 1 : 1400, fromT: controls.target.clone(), toT: c, fromP: camera.position.clone(), toP: c.clone().add(exploreView()) };
+}
+
+/* ---------- Reduce motion: no animation, and a flat 2D graph (x = time) instead of depth ---------- */
+const motionBtn = document.getElementById('motion');
+function setReduced(on, save = true) {
+  const year = focusYearNow();                         // Explore keeps the same year in view across the switch
+  reduced = on;
+  document.body.classList.toggle('reduced', on);
+  motionBtn.classList.toggle('on', on);
+  motionBtn.setAttribute('aria-pressed', String(on));
+  for (const it of items.values()) { it.pos = on ? it.p2 : it.p3; it.group.position.copy(it.pos); it.lbl.position.copy(it.pos); }
+  rail3.visible = !on; rail2.visible = on;
+  for (const tk of ticks) tk.obj.position.set(on ? X2(tk.year) : AXIS.x - 9, on ? AXIS_2D_Y - 5 : AXIS.y, on ? 0 : Z(tk.year));
+  scene.fog = on ? null : FOG;
+  controls.enableRotate = !exploring() && !on;
+  zoomGoal = null;
+  chooseCardSide();
+  renderArrows();
+  renderShots();
+  if (exploring()) centerExplore(year); else flyTo(selected);
+  if (save) { try { localStorage.setItem('svhm-reduced-motion', on ? '1' : '0'); } catch (_) {} syncUrl(); }
+}
+motionBtn.onclick = () => setReduced(!reduced);
 modeBtns.focus.onclick = () => setMode('focus');
 modeBtns.explore.onclick = () => setMode('explore');
 function chooseCardSide() {
   // Put the card on the side with fewer connections, using the camera's resting orientation
-  const fwd = VIEW.clone().negate().normalize(), right = new THREE.Vector3().crossVectors(fwd, YAXIS).normalize();
+  const fwd = viewVec().negate().normalize(), right = new THREE.Vector3().crossVectors(fwd, YAXIS).normalize();
   const S = items.get(selected);
   let l = 0, r = 0;
   for (const e of adj.get(selected)) (items.get(e.id).pos.clone().sub(S.pos).dot(right) < 0 ? l++ : r++);
@@ -769,8 +834,26 @@ function neighborInTime(dir) {
 
 /* ---------- Index panel ---------- */
 const indexEl = document.getElementById('index'), menu = document.getElementById('menu'), q = document.getElementById('q');
-function openIndex() { indexEl.classList.add('open'); menu.setAttribute('aria-expanded', 'true'); }
-function closeIndex() { indexEl.classList.remove('open'); menu.setAttribute('aria-expanded', 'false'); }
+function openIndex() { indexEl.classList.add('open'); menu.setAttribute('aria-expanded', 'true'); document.body.classList.add('index-open'); }
+function closeIndex() { indexEl.classList.remove('open'); menu.setAttribute('aria-expanded', 'false'); document.body.classList.remove('index-open'); }
+
+/* ---------- Corrections: anyone can ask for a fix. In this prototype nothing is sent anywhere. ---------- */
+const fixEl = document.getElementById('fix'), fixAbout = document.getElementById('fix-about');
+fixAbout.innerHTML = '<option value="">The map in general</option>' + nodes.slice().sort((a, b) => a.year - b.year).map(n => `<option value="${n.id}">${n.name} (${dateOf(n)})</option>`).join('');
+function openFix(id = selected) {
+  fixEl.classList.remove('sent');
+  fixAbout.value = id || '';
+  fixEl.classList.add('open');
+  document.getElementById('fix-what').focus();
+}
+function closeFix() { fixEl.classList.remove('open'); }
+document.getElementById('fix-open').onclick = () => openFix();
+document.getElementById('fix-close').onclick = closeFix;
+document.getElementById('fix-form').addEventListener('submit', e => {
+  e.preventDefault();
+  fixEl.classList.add('sent');
+  e.target.reset();
+});
 menu.onclick = () => (indexEl.classList.contains('open') ? closeIndex() : openIndex());
 document.getElementById('close').onclick = closeIndex;
 q.addEventListener('input', renderIndex);
@@ -827,8 +910,8 @@ renderer.domElement.addEventListener('pointermove', e => {
       if (press.obj.userData.shot) press.obj.position.set(p.x, p.y, press.obj.position.z);
       else {
         const it = items.get(press.hit.object.userData.id);
-        it.pos.x = p.x; it.pos.y = p.y;                  // time (z) never changes
-        it.group.position.x = p.x;
+        if (!reduced) { it.pos.x = p.x; it.group.position.x = p.x; }   // in 2D, x is the year, so only up/down
+        it.pos.y = p.y;                                  // time never changes
       }
     }
   }
@@ -856,8 +939,9 @@ renderer.domElement.addEventListener('pointerup', e => {
   renderer.domElement.style.cursor = 'default';
 });
 addEventListener('keydown', e => {
+  if (e.key === 'Escape' && fixEl.classList.contains('open')) return closeFix();
   if (e.key === 'Escape') { if (exploring()) setMode('focus'); else if (detail) { detail = false; renderCard(); syncUrl(); } return closeIndex(); }
-  if (e.target === q) return;
+  if (e.target.closest && e.target.closest('input, textarea, select')) return;
   if (e.key === '/') { e.preventDefault(); openIndex(); q.focus(); return; }
   if (exploring()) {
     if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') travelYears(-5);      // ↑ heads into the scene, back in time
@@ -912,8 +996,8 @@ function tick(now) {
   restFrames = camMoved < 0.004 ? restFrames + 1 : 0;
   lastCam.copy(camera.position); lastTarget.copy(controls.target);
 
-  const focusYear = YEAR_AT(controls.target.z);
-  const appear = still ? 1 : smooth(0, 1.8, (now - born) / 1000);
+  const focusYear = focusYearNow();
+  const appear = calm() ? 1 : smooth(0, 1.8, (now - born) / 1000);
   const S = items.get(selected);
 
   for (const it of items.values()) {
@@ -924,15 +1008,16 @@ function tick(now) {
     const dy = n.year - focusYear;
     const linked = isSel || (h !== undefined && h <= 1) || exploring();
     const direct = isSel || h === 1;
-    let timeA = dy > 0 && !linked ? 1 - smooth(3, 13, dy) : 1 - smooth(FADE_NEAR, FADE_FAR, Math.abs(dy));   // what sits between you and the focus fades quickly
+    let timeA = reduced ? 1 : dy > 0 && !linked ? 1 - smooth(3, 13, dy) : 1 - smooth(FADE_NEAR, FADE_FAR, Math.abs(dy));   // the flat graph shows every year at once   // what sits between you and the focus fades quickly
     if (direct) timeA = Math.max(timeA, 0.5);          // the selected node and its connections never fade out completely
     const overlapsSel = !isSel && S.lr > 0 && Math.hypot(it.lx - S.lx, it.ly - S.ly) < S.lr * 1.6 + it.lr * 1.15;
     const hopA = exploring() ? (isSel ? 1 : 0.85) : isSel ? 1 : (inR ? [1, 1, 0.8, 0.62][h] : 0.28) * (overlapsSel ? 0.06 : 1);
     it.alpha += (timeA * hopA * appear - it.alpha) * lr(0.06);
     group.quaternion.copy(camera.quaternion);
     it.bs += ((isSel ? SEL_SCALE : 1) - it.bs) * lr(0.06);
-    group.scale.setScalar(it.bs * (1 + Math.sin(t * 0.45 + it.phase) * 0.02));   // a slow breath
-    group.position.y = it.pos.y + Math.sin(t * 0.25 + it.phase) * 0.3;
+    const breath = calm() ? 0 : 1;
+    group.scale.setScalar(it.bs * (1 + Math.sin(t * 0.45 + it.phase) * 0.02 * breath));   // a slow breath
+    group.position.y = it.pos.y + Math.sin(t * 0.25 + it.phase) * 0.3 * breath;
     it.lbl.position.copy(group.position);
     // Selected: one pink outline with the photo inside. Direct connections show their photo too.
     line.material.color.lerp(isSel ? C_ROSE : C_WHITE, lr(0.08));
@@ -966,12 +1051,14 @@ function tick(now) {
     if (!c) continue;
     bez(c.a, c.c, c.b, c.u0 + (c.u1 - c.u0) * u, g.mesh.position);
     g.mesh.quaternion.copy(camera.quaternion);
-    g.mesh.material.opacity = Math.sin(u * Math.PI) * 0.7 * g.L.opacity;
+    g.mesh.material.opacity = calm() ? 0 : Math.sin(u * Math.PI) * 0.7 * g.L.opacity;
   }
 
-  dust.rotation.z = t * 0.003;
-  bright.rotation.z = -t * 0.002;
-  bright.material.opacity = 0.45 + Math.sin(t * 0.4) * 0.1;
+  if (!calm()) {
+    dust.rotation.z = t * 0.003;
+    bright.rotation.z = -t * 0.002;
+    bright.material.opacity = 0.45 + Math.sin(t * 0.4) * 0.1;
+  }
 
   updateShots(now);
   layoutOverlay(now, dt);
@@ -1002,7 +1089,7 @@ function tick(now) {
     if (!tk.w) { tk.w = tk.el.offsetWidth; tk.h = tk.el.offsetHeight; }
     const c = toScreen(tk.pos);
     const r = { x1: c.x - tk.w / 2 - 4, x2: c.x + tk.w / 2 + 4, y1: c.y - tk.h / 2 - 2, y2: c.y + tk.h / 2 + 2 };
-    const a = (1 - smooth(8, 36, Math.abs(tk.year - focusYear))) * appear;
+    const a = (reduced ? 1 : 1 - smooth(8, 36, Math.abs(tk.year - focusYear))) * appear;
     const clear = !c.behind && a > 0.05 && !taken.some(o => rectsHit(r, o)) && !discs.some(d => rectHitsDisc(r, d.sx, d.sy, d.sr * 1.15));
     hold(tk, clear, now, still ? 0 : 350);
     tk.op += ((tk.vis ? a : 0) - tk.op) * settle(dt, 160);
@@ -1033,7 +1120,11 @@ if (params.get('index') === '1') openIndex();
 if (still) document.body.classList.add('still');
 document.fonts.ready.then(() => { for (const it of items.values()) it.lw = 0; for (const a of arrows) a.w = 0; for (const tk of ticks) tk.w = 0; });
 const intro = document.getElementById('intro');
-if (skipIntro) {
+let savedMotion = null;
+try { savedMotion = localStorage.getItem('svhm-reduced-motion'); } catch (_) {}
+const startReduced = params.get('motion') === 'reduced' || (params.get('motion') !== 'full' && (savedMotion === '1' || (savedMotion === null && matchMedia('(prefers-reduced-motion: reduce)').matches)));
+if (startReduced) setReduced(true, false);
+if (skipIntro || reduced) {
   intro.remove();
   const target = items.get(selected).pos;
   controls.target.copy(target);

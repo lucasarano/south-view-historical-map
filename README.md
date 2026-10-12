@@ -11,6 +11,9 @@ A 3D map of the people, events and places connected to Historic South-View Cemet
 ## How to read it
 
 - **Time is depth.** Each item sits at its year. Recent years are closest to you; older ones sit further back.
+- **Reduce motion** (top bar) turns off every animation and lays the map out flat as a 2D graph: time runs left to right, with a decade rail along the bottom. Everything else works the same (Focus, Explore, arrows, cards). It turns on by itself when the visitor's device asks for reduced motion, the choice is remembered, and `&motion=reduced` opens it directly.
+- **Corrections:** "Something need correcting? Send a request" (bottom left, or in any expanded card) opens a short form. In this prototype the form is not connected to anything, so nothing is sent.
+- **Learn more:** expanded cards carry a sample link to South-View's website.
 - **Shapes:** circles are people, diamonds are events, squares are places.
 - **Lines** run from source to target with a small arrowhead. A **dashed** line is a connection that still needs verifying.
 - **Numbers** on shapes show how many steps away they are from the selected item.
