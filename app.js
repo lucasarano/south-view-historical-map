@@ -1,7 +1,13 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/CSS2DRenderer.js';
-import { nodes, links, START_YEAR } from './data.js';
+import { loadContent } from './content.js';
+
+// Everything shown comes from the content sheet (content.js, docs/MAINTENANCE.md)
+const { nodes, links, settings, START_YEAR, END_YEAR } = await loadContent();
+const T0 = START_YEAR - 4, T1 = END_YEAR + 2;   // the time rail runs a little past the first and last years
+// Text from the content sheet is shown as text, never as HTML
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 /* ---------- Constants ---------- */
 const DEPTH = 2.2;                                   // world units per year (time lives on the z axis only)
@@ -24,7 +30,7 @@ const viewVec = () => (reduced ? VIEW_2D : VIEW).clone().multiplyScalar(isMobile
 const XS = 5, X2 = year => (year - 1950) * XS, YEAR_AT_X = x => 1950 + x / XS;
 
 const params = new URLSearchParams(location.search);
-let selected = params.get('select') || 'hamilton';
+let selected = params.get('select') || (nodes.find(n => n.type === 'event') || nodes[0]).id;
 let radius = Math.min(3, Math.max(1, +(params.get('radius') || 2)));
 const STEPS_HOW = 'Numbers show how many steps away each connection is. Pink lines trace the path from here.';
 const skipIntro = params.get('intro') === '0';
@@ -39,6 +45,7 @@ const lr = k => (calm() ? 1 : k);
 
 /* ---------- Graph ---------- */
 const byId = new Map(nodes.map(n => [n.id, n]));
+if (!byId.has(selected)) selected = (nodes.find(n => n.type === 'event') || nodes[0]).id;
 const adj = new Map(nodes.map(n => [n.id, []]));
 for (const l of links) {
   adj.get(l.a).push({ id: l.b, rel: l.rel, verify: !!l.verify, out: true });
@@ -130,28 +137,18 @@ const PHOTO = {
 };
 const HALO = new THREE.RingGeometry(R * 1.85 - 0.09, R * 1.85, 128);
 
-/* ---------- Media (prototype placeholders) ---------- */
-const POOL = {
-  person: ['grounds-flowers', 'home-foundation', 'our-history', 'dogwood'],
-  event: ['our-history', 'entrance', 'home-foundation', 'front-page2'],
-  place: ['entrance', 'dogwood', 'front-page2', 'grounds-flowers'],
-};
-const SPECIAL = { panic: ['panic-1893'], clinic: ['casket-1918'], charter: ['entrance', 'our-history'] };
-function mediaFor(n) {
-  const pool = (SPECIAL[n.id] || []).concat(POOL[n.type].filter(x => !(SPECIAL[n.id] || []).includes(x)));
-  const k = nodes.indexOf(n);
-  const pick = j => pool[(j + k) % pool.length];
-  return [pick(0), pick(1), pick(2)];
-}
+/* ---------- Pictures: only public ones from the content sheet; everything else shows a symbol ---------- */
+const mediaFor = n => (n.picture ? [n.picture] : []);
 // Every title carries its date. People show their lifespan when known; everything else shows its year (its place on the time axis).
-const dateOf = n => (n.type === 'person' && /\d{4}\s*–\s*\d{4}/.test(n.when) ? n.when.match(/\d{4}\s*–\s*\d{4}/)[0] : String(n.year));
-const titleOf = n => `${n.name}<span class="dt">${dateOf(n)}</span>`;
+const dateOf = n => n.dates || String(n.year);
+const titleOf = n => `${esc(n.name)}<span class="dt">${esc(dateOf(n))}</span>`;
 // The extra detail under a title, unless it only restates the date ("1893", "Opened 1952")
-const subOf = n => { const rest = n.when.replace(dateOf(n), '').replace(/[\s,]+/g, ' ').trim(); return !rest || /^(opened|founded)$/i.test(rest) ? '' : n.when; };
+const subOf = () => '';
 const initialsOf = n => n.name.replace(/^(Dr\.|Rev\.)\s+/, '').split(/\s+/).filter(w => /^[A-Z]/.test(w)).map(w => w[0]).slice(0, 2).join('');
 const imgCache = new Map();
 function loadImg(src) {
-  if (!imgCache.has(src)) imgCache.set(src, new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = src; }));
+  // crossOrigin lets a picture hosted elsewhere (Wikimedia, the Library of Congress) be drawn into the scene
+  if (!imgCache.has(src)) imgCache.set(src, new Promise(res => { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => res(im); im.onerror = () => res(null); im.src = src; }));
   return imgCache.get(src);
 }
 function drawCover(x, im, w, h) {
@@ -163,45 +160,51 @@ function drawCover(x, im, w, h) {
 const texCache = new Map();
 function canvasTex(c) { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; }
 // Square texture shown inside the node itself
+function drawSymbol(x, type, cx, cy, size) {
+  x.strokeStyle = '#8c8c88'; x.fillStyle = '#8c8c88'; x.lineWidth = size * 0.06; x.lineCap = 'round';
+  x.beginPath();
+  if (type === 'person') {
+    x.arc(cx, cy - size * 0.22, size * 0.17, 0, Math.PI * 2);                 // head
+    x.moveTo(cx - size * 0.32, cy + size * 0.42);
+    x.quadraticCurveTo(cx - size * 0.32, cy + size * 0.02, cx, cy + size * 0.02);   // shoulders
+    x.quadraticCurveTo(cx + size * 0.32, cy + size * 0.02, cx + size * 0.32, cy + size * 0.42);
+  } else {
+    const r = size * 0.3;
+    x.moveTo(cx, cy - r); x.lineTo(cx + r, cy); x.lineTo(cx, cy + r); x.lineTo(cx - r, cy); x.closePath();
+    x.moveTo(cx + size * 0.07, cy); x.arc(cx, cy, size * 0.07, 0, Math.PI * 2);
+  }
+  x.stroke();
+}
 async function nodeTexture(n) {
   const key = 'node:' + n.id;
   if (texCache.has(key)) return texCache.get(key);
-  await document.fonts.ready;
   const c = document.createElement('canvas'); c.width = c.height = 512;
   const x = c.getContext('2d');
-  const m = n.type === 'person' ? 'portrait' : mediaFor(n)[0];
-  if (m === 'portrait') {
-    x.fillStyle = '#121212'; x.fillRect(0, 0, 512, 512);
-    x.fillStyle = '#9a9a96'; x.font = 'italic 190px Libron, Georgia, serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.fillText(initialsOf(n), 256, 268);
-  } else {
-    const im = await loadImg(`media/${m}.jpg`);
-    if (im) drawCover(x, im, 512, 512);
-  }
+  x.fillStyle = '#121212'; x.fillRect(0, 0, 512, 512);
+  const im = n.picture ? await loadImg(n.picture) : null;
+  if (im) drawCover(x, im, 512, 512); else drawSymbol(x, n.type, 256, 256, 340);
   const t = canvasTex(c); texCache.set(key, t); return t;
 }
 // Captioned panel shown around the node
-async function shotTexture(key, n) {
-  const id = key === 'portrait' ? 'portrait:' + n.id : key;
+async function shotTexture(src, n) {
+  const id = 'shot:' + src;
   if (texCache.has(id)) return texCache.get(id);
   await document.fonts.ready;
   const c = document.createElement('canvas'); c.width = 512; c.height = 400;
   const x = c.getContext('2d');
   const IH = 340, rr = 10;
   x.save(); x.beginPath(); x.roundRect(2, 2, 508, IH - 4, rr); x.clip();
-  if (key === 'portrait') {
-    x.fillStyle = '#0d0d0d'; x.fillRect(0, 0, 512, IH);
-    x.fillStyle = '#8c8c88'; x.font = 'italic 120px Libron, Georgia, serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.fillText(initialsOf(n), 256, IH / 2 + 6);
-  } else {
-    const im = await loadImg(`media/${key}.jpg`);
-    if (im) drawCover(x, im, 512, IH);
-  }
+  x.fillStyle = '#0d0d0d'; x.fillRect(0, 0, 512, IH);
+  const im = await loadImg(src);
+  if (im) drawCover(x, im, 512, IH);
   x.restore();
   x.strokeStyle = 'rgba(255,255,255,.22)'; x.lineWidth = 2;
   x.beginPath(); x.roundRect(2, 2, 508, IH - 4, rr); x.stroke();
-  x.fillStyle = '#6a6a66'; x.font = 'italic 24px Libron, Georgia, serif'; x.textAlign = 'left'; x.textBaseline = 'alphabetic';
-  x.fillText(key === 'portrait' ? 'Portrait to come' : 'Sample image', 4, 386);
+  // The credit is on the card in full; the panel carries its first words
+  let cap = (n.credit || '').split('. ')[0];
+  x.fillStyle = '#6a6a66'; x.font = 'italic 22px Libron, Georgia, serif'; x.textAlign = 'left'; x.textBaseline = 'alphabetic';
+  while (cap && x.measureText(cap).width > 500) cap = cap.slice(0, -2).trimEnd() + '…';
+  x.fillText(cap, 4, 386);
   const t = canvasTex(c); texCache.set(id, t); return t;
 }
 
@@ -257,20 +260,20 @@ const AXIS = { x: -72, y: -46 };
 const AXIS_2D_Y = Math.min(...[...items.values()].map(it => it.p2.y)) - 16;   // in 2D the rail runs along the bottom
 const railMat = new THREE.LineBasicMaterial({ color: WHITE, transparent: true, opacity: 0.16, depthWrite: false });
 const rail3 = (() => {
-  const pts = [new THREE.Vector3(AXIS.x, AXIS.y, Z(1876)), new THREE.Vector3(AXIS.x, AXIS.y, Z(2032))];
-  for (let y = 1880; y <= 2030; y += 10) pts.push(new THREE.Vector3(AXIS.x - 2.5, AXIS.y, Z(y)), new THREE.Vector3(AXIS.x + 2.5, AXIS.y, Z(y)));
+  const pts = [new THREE.Vector3(AXIS.x, AXIS.y, Z(T0)), new THREE.Vector3(AXIS.x, AXIS.y, Z(T1))];
+  for (let y = START_YEAR; y <= END_YEAR; y += 10) pts.push(new THREE.Vector3(AXIS.x - 2.5, AXIS.y, Z(y)), new THREE.Vector3(AXIS.x + 2.5, AXIS.y, Z(y)));
   return new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), railMat);
 })();
 const rail2 = (() => {
-  const pts = [new THREE.Vector3(X2(1876), AXIS_2D_Y, 0), new THREE.Vector3(X2(2032), AXIS_2D_Y, 0)];
-  for (let y = 1880; y <= 2030; y += 10) pts.push(new THREE.Vector3(X2(y), AXIS_2D_Y - 1.5, 0), new THREE.Vector3(X2(y), AXIS_2D_Y + 1.5, 0));
+  const pts = [new THREE.Vector3(X2(T0), AXIS_2D_Y, 0), new THREE.Vector3(X2(T1), AXIS_2D_Y, 0)];
+  for (let y = START_YEAR; y <= END_YEAR; y += 10) pts.push(new THREE.Vector3(X2(y), AXIS_2D_Y - 1.5, 0), new THREE.Vector3(X2(y), AXIS_2D_Y + 1.5, 0));
   return new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), railMat.clone());
 })();
 rail2.material.opacity = 0.3;
 rail2.visible = false;
 scene.add(rail3, rail2);
 const ticks = [];
-for (let y = 1880; y <= 2030; y += 10) {
+for (let y = START_YEAR; y <= END_YEAR; y += 10) {
   const el = document.createElement('div');
   el.className = 'tick';
   el.textContent = y;
@@ -400,13 +403,13 @@ function zoomBy(f) {
   zoomGoal = Math.min(base * 2.3, Math.max(base * 0.35, (zoomGoal ?? base) * f));
 }
 /* Explore mode: the camera keeps its angle and glides to a goal. Scrolling moves it along the time (z) axis, dragging moves it sideways. */
-const Z_MIN = Z(1876), Z_MAX = Z(2032), XY_MAX = 130;
+const Z_MIN = Z(T0), Z_MAX = Z(T1), XY_MAX = 130;
 let exploreGoal = null;
 const EXPLORE_VIEW = new THREE.Vector3(0, 16, 125);  // fixed: Explore never tilts
 const exploreView = () => (reduced ? VIEW_2D.clone().multiplyScalar(1.25) : EXPLORE_VIEW.clone()).multiplyScalar(isMobile() ? 1.7 : 1);
 function moveExplore(dx, dy, dz) {
   if (!exploreGoal) exploreGoal = controls.target.clone();
-  const [x0, x1] = reduced ? [X2(1876), X2(2032)] : [-XY_MAX, XY_MAX];   // in 2D, x is the time range
+  const [x0, x1] = reduced ? [X2(T0), X2(T1)] : [-XY_MAX, XY_MAX];   // in 2D, x is the time range
   exploreGoal.x = Math.max(x0, Math.min(x1, exploreGoal.x + dx));
   exploreGoal.y = Math.max(-XY_MAX, Math.min(XY_MAX, exploreGoal.y + dy));
   exploreGoal.z = reduced ? 0 : Math.max(Z_MIN, Math.min(Z_MAX, exploreGoal.z + dz));
@@ -449,16 +452,14 @@ function renderCard() {
   const g = ringsSummary();
   const reached = g.slice(0, radius).flat();
   const years = reached.concat(n).map(x => x.year);
-  const status = n.status === 'documented' ? 'Documented' : 'Pending verification';
   const legend = [0, 1, 2].map(i => `<li class="${i < radius ? '' : 'off'}"><i class="lg steps h${i + 1}">${i + 1}</i><span>${['1 step · direct', '2 steps away', '3 steps away'][i]}</span><em>${g[i].length}</em></li>`).join('');
-  const restsShort = n.rests === true ? 'Yes' : n.rests === 'verify' ? 'To verify' : '—';
   const me = n;
   const connList = (cls, title) => `<div class="sec ${cls}"><b class="h">${title}</b>${adj.get(selected).slice().sort((a, b) => byId.get(a.id).year - byId.get(b.id).year).map(e => {
     const o = byId.get(e.id);
     return `<button class="conn" data-id="${o.id}">${glyph(o.type)}<span><b>${titleOf(o)}</b><small>${e.out ? e.rel : 'via “' + e.rel + '”'} · ${o.year < me.year ? 'earlier' : o.year > me.year ? 'later' : 'same year'}${e.verify ? ' · to verify' : ''}</small></span></button>`;
   }).join('')}</div>`;
   const reach = reached.length
-    ? `Reaches <em>${reached.length}</em> ${reached.length === 1 ? 'life, event or place' : 'lives, events and places'}, <em>${Math.min(...years)}–${Math.max(...years)}</em>.`
+    ? `Reaches <em>${reached.length}</em> ${reached.length === 1 ? 'life or event' : 'lives and events'}, <em>${Math.min(...years)}–${Math.max(...years)}</em>.`
     : 'No documented connections yet.';
 
   card.classList.toggle('open', detail);
@@ -468,13 +469,13 @@ function renderCard() {
     <div class="kind"><i></i>${TYPE[n.type]}<button class="more-cue" id="cue" aria-expanded="${detail}">${detail ? 'Less' : 'More'}</button></div>
     <button class="name" id="name" aria-expanded="${detail}" title="${detail ? 'Show less' : 'More about ' + n.name}">${titleOf(n)}</button>
     ${subOf(n) ? `<div class="when">${subOf(n)}</div>` : ''}
-    <p>${n.text}</p>
-    ${detail ? `${n.more ? `<p class="long">${n.more}</p>` : ''}
+    ${n.one && !(detail && n.text && n.text.startsWith(n.one)) ? `<p>${esc(n.one)}</p>` : ''}
+    ${detail ? `${n.text && n.text !== n.one ? `<blockquote class="long">${n.text.split(/\n\s*\n/).map(t => `<p>${esc(t)}</p>`).join('')}</blockquote>` : ''}
     <dl class="facts">
-      <div><dt>${n.type === 'person' ? 'Lived' : 'When'}</dt><dd>${n.when}</dd></div>
-      <div><dt>Rests at South-View</dt><dd>${restsShort}</dd></div>
-      <div><dt>Status</dt><dd>${status}</dd></div>
-      <div><dt>Source</dt><dd>${n.source}</dd></div>
+      <div><dt>${n.type === 'person' ? 'Lived' : 'When'}</dt><dd>${esc(n.dates)}</dd></div>
+      ${n.rests ? `<div><dt>Rests at South-View</dt><dd>${esc(n.rests)}</dd></div>` : ''}
+      <div><dt>Source</dt><dd>${esc(n.source || 'Team notes')}</dd></div>
+      ${n.credit ? `<div class="wide"><dt>Picture</dt><dd>${esc(n.credit)}</dd></div>` : ''}
     </dl>
     ${connList('', 'Connections')}
     <div class="rip">
@@ -483,8 +484,7 @@ function renderCard() {
       <ul class="legend">${legend}</ul>
       <p class="reach">${reach}</p>
     </div>
-    <div class="links"><a href="https://southviewcemetery.com/" target="_blank" rel="noopener">Learn more at South-View ↗</a><small>sample link</small><button id="card-fix">Suggest a correction</button></div>
-    <p class="draft">Draft · South-View reviews every story before publication.</p>`
+    <div class="links"><a href="${esc(settings['Learn more link'] || 'https://southviewcemetery.com/')}" target="_blank" rel="noopener">Learn more at South-View ↗</a><button id="card-fix">Suggest a correction</button></div>`
     : `<div class="rip simple"><b class="h">Ripple of influence</b><p class="reach">${reach}</p></div>
     ${isMobile() ? connList('mob-conns', 'Travel to') : ''}`}`;
   card.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { radius = +b.dataset.r; renderCard(); syncUrl(); });
@@ -848,8 +848,10 @@ legendBtn.onclick = () => setLegend(!legendEl.classList.contains('open'));
 
 /* ---------- Corrections: anyone can ask for a fix. In this prototype nothing is sent anywhere. ---------- */
 const fixEl = document.getElementById('fix'), fixAbout = document.getElementById('fix-about');
-fixAbout.innerHTML = '<option value="">The map in general</option>' + nodes.slice().sort((a, b) => a.year - b.year).map(n => `<option value="${n.id}">${n.name} (${dateOf(n)})</option>`).join('');
+fixAbout.innerHTML = '<option value="">The map in general</option>' + nodes.slice().sort((a, b) => a.year - b.year).map(n => `<option value="${n.id}">${esc(n.name)} (${esc(dateOf(n))})</option>`).join('');
+const formLink = settings['Corrections form link'];
 function openFix(id = selected) {
+  if (formLink) return void window.open(formLink, '_blank', 'noopener');
   fixEl.classList.remove('sent');
   fixAbout.value = id || '';
   fixEl.classList.add('open');
@@ -870,7 +872,7 @@ function renderIndex() {
   const term = q.value.trim().toLowerCase();
   document.getElementById('list').innerHTML = [['person', 'People'], ['event', 'Events'], ['place', 'Places']].map(([type, title]) => {
     const rows = nodes.filter(n => n.type === type && (!term || n.name.toLowerCase().includes(term))).sort((a, b) => a.year - b.year);
-    return rows.length ? `<h3>${title}</h3>` + rows.map(n => `<button class="item ${n.id === selected ? 'on' : ''}" data-id="${n.id}">${glyph(n.type)}<span class="nm">${n.name}</span><span class="yr">${dateOf(n)}</span></button>`).join('') : '';
+    return rows.length ? `<h3>${title}</h3>` + rows.map(n => `<button class="item ${n.id === selected ? 'on' : ''}" data-id="${n.id}">${glyph(n.type)}<span class="nm">${esc(n.name)}</span><span class="yr">${esc(dateOf(n))}</span></button>`).join('') : '';
   }).join('');
   document.querySelectorAll('#list .item').forEach(b => b.onclick = () => select(b.dataset.id));
 }

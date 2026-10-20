@@ -81,7 +81,6 @@ body.still .card, body.still .arrow, body.still .badge, body.still .rip-svg * { 
 .facts div:last-child { grid-column: 1 / -1; }
 .facts dt { font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--dim); }
 .facts dd { margin: 4px 0 0; font-size: 14px; color: #D6D6D2; }
-.card .draft { margin-top: 16px; font-size: 12px; font-style: italic; color: var(--dim); }
 .year { position: fixed; right: 30px; bottom: 26px; z-index: 4; font-size: 44px; font-style: italic; color: var(--white); opacity: 0; transition: opacity .8s ease; pointer-events: none; letter-spacing: .02em; }
 .year::before { content: 'Year'; display: block; font-size: 11px; font-style: normal; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--dim); text-align: right; margin-bottom: 4px; }
 .card .kind { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--grey); }
@@ -92,7 +91,11 @@ body.still .card, body.still .arrow, body.still .badge, body.still .rip-svg * { 
 .card .more-cue:hover { border-color: rgba(212,60,103,.6); color: var(--white); }
 .card .when { font-size: 16px; font-style: italic; color: var(--grey); }
 .card p { margin: 14px 0 0; font-size: 15px; line-height: 1.55; color: #D6D6D2; }
-.card p.long { margin-top: 10px; color: #BEBEBA; }
+.card blockquote.long { margin: 14px 0 0; padding-left: 14px; border-left: 2px solid var(--hair); }
+.card blockquote.long p { margin: 0 0 10px; font-size: 15px; line-height: 1.6; color: #BEBEBA; }
+.card.open blockquote.long p { font-size: 15px; }
+.facts div.wide { grid-column: 1 / -1; }
+.facts div.wide dd { font-size: 12px; font-style: italic; color: var(--grey); }
 .card .h { font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--grey); }
 .card .sec { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--hair); display: grid; gap: 4px; }
 .card .sec .h { margin-bottom: 6px; }
@@ -198,7 +201,6 @@ body.index-open .fix-link { left: 340px; }
 .fix.sent .fix-done { display: block; }
 .card .links { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--hair); display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; font-size: 13px; }
 .card .links a { color: var(--white); text-decoration: underline; text-decoration-color: var(--rose); text-underline-offset: 4px; }
-.card .links small { color: var(--dim); font-style: italic; }
 .card .links button { font-size: 13px; color: var(--grey); text-decoration: underline; text-decoration-color: var(--hair); text-underline-offset: 4px; }
 .card .links button:hover { color: var(--white); }
 
@@ -294,11 +296,11 @@ body.exploring .year { bottom: 70px; }
     <span>Reduce motion</span>
   </button>
   <div class="word"><img class="mk" src="logo/mark-dark.svg" alt=""><b>South-View</b><span>Historical Map</span></div>
-  <div class="tag"><i></i>Prototype · sample content, pending verification</div>
+  <div class="tag"><i></i>Prototype</div>
 </div>
 
-<aside class="index" id="index" aria-label="Index of people, events and places">
-  <header><b>People, events &amp; places</b><button id="close" aria-label="Close index">×</button></header>
+<aside class="index" id="index" aria-label="Index of people and events">
+  <header><b>People &amp; events</b><button id="close" aria-label="Close index">×</button></header>
   <input id="q" type="search" placeholder="Search" aria-label="Search">
   <div class="list" id="list"></div>
 </aside>
@@ -314,13 +316,11 @@ body.exploring .year { bottom: 70px; }
     <ul>
       <li><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/></svg>A person</li>
       <li><svg viewBox="0 0 20 20"><path d="M10 2.5 17.5 10 10 17.5 2.5 10Z"/></svg>An event</li>
-      <li><svg viewBox="0 0 20 20"><rect x="3.5" y="3.5" width="13" height="13"/></svg>A place</li>
       <li><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" class="rose"/></svg>The one you selected</li>
     </ul>
     <h4>Connections</h4>
     <ul>
-      <li><svg viewBox="0 0 20 20"><path d="M2 10h14M12.5 6.5 16 10l-3.5 3.5"/></svg>A documented connection; the arrow points to what it shaped</li>
-      <li><svg viewBox="0 0 20 20"><path d="M2 10h14" stroke-dasharray="2.5 2.5"/></svg>A connection still to verify</li>
+      <li><svg viewBox="0 0 20 20"><path d="M2 10h14M12.5 6.5 16 10l-3.5 3.5"/></svg>A connection from the team notes; the arrow points from one to the other</li>
       <li><svg viewBox="0 0 20 20"><path d="M2 10h16" class="rose"/></svg>Connections of the one you selected</li>
     </ul>
     <h4>Ripple of influence</h4>
