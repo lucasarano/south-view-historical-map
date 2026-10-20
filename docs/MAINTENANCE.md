@@ -13,6 +13,8 @@ The map shows whatever is in one Google Sheet, the **content sheet**. Change the
 
 A change in the sheet shows up the next time someone opens or reloads the map.
 
+**How the map finds the sheet.** The sheet's ID (the long code in its address, after `/d/`) is written once in `content.js`. The map asks Google for each tab as a plain table, which Google allows only because the sheet is shared as "Anyone with the link: Viewer". Nothing else links them: no account, no password, no service in between. To point the map at a different sheet, change that ID and redeploy. The new sheet needs the same three tabs and column names.
+
 ## Who can edit (test phase)
 
 - **Anyone the sheet is shared with as an Editor can change the map.** There is no approval step while we test (see [ADR 0002](adr/0002-content-lives-in-a-google-sheet.md)).
@@ -66,6 +68,16 @@ A change in the sheet shows up the next time someone opens or reloads the map.
 **Hide something without deleting it.** Set Show on map to `No`.
 
 **Remove a line.** Delete its row in Connections.
+
+## When new research comes in
+
+The sheet is the only thing to update; nothing else feeds the map.
+
+1. Add the new facts to the sheet: new rows in Entries, new lines in Connections, or a corrected cell.
+2. Quote the research word for word in "Text from the notes", with the book and page in Source.
+3. Optionally, keep the team's own record in step by adding the same text to `sources/team-notes.md`. The map doesn't read that file; it's the archive.
+
+The files in `sources/` (the team notes and South-View's scripts and flyers) are reference only. Editing them changes nothing on the map.
 
 ## Rules for what goes on the map
 

@@ -160,7 +160,9 @@ EVENTS = [
          pic='https://upload.wikimedia.org/wikipedia/commons/8/89/Panic_at_the_NYSE_5_May_1893_cph.3b13869.jpg',
          credit='"The recent panic," New York Stock Exchange, May 5, 1893. Frank Leslie\'s Illustrated Newspaper. Library of Congress. Public domain.'),
     dict(name='Pittsburgh Riot', type='Event', dates='1902', year=1902),
-    dict(name='1906 Atlanta Massacre', type='Event', dates='1906', year=1906),
+    dict(name='1906 Atlanta Massacre', type='Event', dates='1906', year=1906,
+         pic='https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Atlanta_Constitution%2C_front_page%2C_September_23%2C_1906.png/500px-Atlanta_Constitution%2C_front_page%2C_September_23%2C_1906.png',
+         credit='The Atlanta Constitution, front page, September 23, 1906. Public domain (via Wikimedia Commons).'),
     dict(name='Casket Scandal', type='Event', dates='1922', year=1922),
     dict(name='Civil Rights Movement', type='Event', dates='1954–1968', year=1954),
 ]
