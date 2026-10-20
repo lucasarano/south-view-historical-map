@@ -97,18 +97,16 @@ These come from the team's decisions (`docs/adr/`):
 
 ## Corrections from visitors
 
-The "Suggest a correction" buttons open a Google Form, and every answer lands in a new tab of the content sheet. To set it up once (about two minutes):
+The "Suggest a correction" buttons open the [corrections form](https://docs.google.com/forms/d/e/1FAIpQLScbkWoLiCwX2orTXdWUKgRNx_vihMOkPgxnnYfkHpQqNo7rgA/viewform) ("South-View Historical Map – Corrections form" in Drive). It asks four questions:
+- Which person or event?
+- What should change? (required)
+- Source, if you have one
+- Your name and how you're connected (optional)
 
-1. In the content sheet: **Tools**, **Create a new form**.
-2. Title it "Suggest a correction to the South-View map" and add four questions:
-   - "Which person or event?" (short answer)
-   - "What should change?" (paragraph, required)
-   - "Source, if you have one" (short answer)
-   - "Your name and how you're connected (optional)" (short answer)
-3. Click **Send**, choose the link icon, and copy the link.
-4. Paste the link into the Settings tab, next to "Corrections form link".
+Every answer lands in the content sheet's **Form Responses 1** tab. Read them, check each against the notes or a source, and make the change in Entries yourself. The map never changes on its own from a form answer.
 
-Answers appear in a tab called "Form Responses 1". Read them, check them against the notes or a source, and make the change in Entries yourself. The map never changes on its own from a form answer.
+- **To change the questions,** edit the form in Google Forms. The link stays the same.
+- **To use a different form,** paste its link into the Settings tab, next to "Corrections form link". To make a new linked form, use **Tools**, **Create a new form** in the content sheet, then **Publish**.
 
 ## If something looks wrong
 

@@ -13,7 +13,7 @@ A 3D map of the people, events and places connected to Historic South-View Cemet
 - **Time is depth.** Each item sits at its year. Recent years are closest to you; older ones sit further back.
 - **Reduce motion** (top bar) turns off every animation and lays the map out flat as a 2D graph: time runs left to right, with a decade rail along the bottom. Everything else works the same (Focus, Explore, arrows, cards). It turns on by itself when the visitor's device asks for reduced motion, the choice is remembered, and `&motion=reduced` opens it directly.
 - **Legend** (bottom right, top left on phones) starts as a small button and opens a short key to the shapes, the lines, the ripple numbers and how time is laid out.
-- **Corrections:** "Something need correcting? Send a request" (bottom left, or in any expanded card) opens South-View's Google Form once its link is in the content sheet's Settings tab. Until then, nothing is sent.
+- **Corrections:** "Something need correcting? Send a request" (bottom left, or in any expanded card) opens the Google Form named in the content sheet's Settings tab. Answers land in the sheet's Form Responses 1 tab, and an editor makes any change by hand.
 - **Learn more:** expanded cards link to South-View's website.
 - **Shapes:** circles are people, diamonds are events. Entries with a public picture show it; the rest show a person or event symbol.
 - **Lines** run from one entry to another with a small arrowhead, and read as a sentence: "Lucius L. Lee *lost the pauper burial contract to* David T. Howard".
