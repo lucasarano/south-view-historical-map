@@ -24,7 +24,7 @@ def after_dash(b):
     return re.split(r'\s+[-–]\s+', b, maxsplit=1)[1].strip()
 
 HENDERSON = 'Henderson, South-View: An African American City of the Dead'
-NOT_RECORDED = 'Team notes (source not recorded)'
+NOT_RECORDED = 'Team notes'   # the notes give no book or page for these
 
 # (entry, old, new, why). Every fix must match exactly once.
 FIXES = [
