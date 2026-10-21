@@ -21,8 +21,8 @@ A 3D map of the people, events and places connected to Historic South-View Cemet
 
 ## How to use it
 
-- **Explore** (the default): scroll to move through time, drag to look around. Click anything to open its story.
-- **Focus**: the chosen entry's card shows the start of its text from the team notes; **Learn more** opens the whole text, its facts and every connection. Click a floating card to travel; its small arrow leans back for something earlier and forward for something later. Click empty space to go back to Explore. Every entry opens at the same zoom; scrolling zooms until the next click.
+- **Focus** (where the main link opens, on "South-View founded"): the chosen entry's card shows the start of its text from the team notes; **Learn more** opens the whole text, its facts and every connection. Floating cards name each connected entry; click one to travel. Its arrow leans back (grey) for something earlier and forward (bright) for something later. The card lets clicks through to anything behind it. Click empty space to go to Explore. Every entry opens at the same zoom; scrolling zooms until the next click.
+- **Explore** (switch in the top bar, or click empty space): scroll to move through time, drag to look around. Click anything to open its story. `?mode=explore` opens the map straight in Explore.
 - **Index** (top left): search and jump to any item.
 - **Keys:** ← → earlier and later · `/` search · Esc back.
 

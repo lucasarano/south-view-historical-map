@@ -579,11 +579,14 @@ function renderArrows() {
     const when = n.year < me.year ? 'earlier' : n.year > me.year ? 'later' : 'same year';
     const el = document.createElement('button');
     el.className = 'arrow';
-    el.innerHTML = `<span class="chev">${ARROW_SVG}</span><span><div class="t">${titleOf(n)}</div><div class="s">${e.out ? e.rel : 'via “' + e.rel + '”'} · ${when}${e.verify ? ' · to verify' : ''}</div></span>`;
+    // Just the name and the arrow; the arrow itself says earlier (leans back) or later (leans forward)
+    el.innerHTML = `<span class="chev">${ARROW_SVG}</span><span class="t">${esc(n.name)}</span>`;
+    el.classList.add(n.year < me.year ? 'back' : n.year > me.year ? 'fwd' : 'level');
+    el.setAttribute('aria-label', `Go to ${n.name} (${when})`);
     el.onclick = () => select(n.id);
     overlay.appendChild(el);
     // tx/ty: solved offset from the selected node; ex/ey: the offset shown, easing toward it
-    return { el, id: n.id, w: 0, h: 0, tx: null, ty: null, ex: 0, ey: 0, x: 0, y: 0, off: false };
+    return { el, id: n.id, w: 0, h: 0, tx: null, ty: null, ex: 0, ey: 0, x: 0, y: 0, off: false, ang: null };
   });
   solvedR = 0;
 }
@@ -736,7 +739,11 @@ function layoutOverlay(now, dt) {
       // 3D: the arrow leans into the screen when the destination is earlier (further back in time)
       // and out toward you when it is later; the flat 2D map has no depth, so it stays flat there
       const dy = reduced ? 0 : Math.sign(byId.get(a.id).year - S.n.year);
-      a.el.querySelector('svg').style.transform = `rotate(${Math.atan2(d.dy, d.dx)}rad) rotateY(${dy * -58}deg)`;
+      const want = Math.atan2(d.dy, d.dx);
+      if (a.ang === null) a.ang = want;
+      else { const diff = Math.atan2(Math.sin(want - a.ang), Math.cos(want - a.ang)); if (Math.abs(diff) > 0.04) a.ang += diff * f; }   // small wobbles are ignored
+      const tf = `rotate(${a.ang.toFixed(3)}rad) rotateY(${dy * -62}deg)`;
+      if (a.tf !== tf) { a.tf = tf; a.el.querySelector('svg').style.transform = tf; }
       obstacles.push({ x1: a.x - a.w / 2 - 6, x2: a.x + a.w / 2 + 6, y1: a.y - a.h / 2 - 6, y2: a.y + a.h / 2 + 6 });
     }
   }
@@ -896,6 +903,8 @@ function rayAt(e) {
   ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
   ray.setFromCamera(ptr, camera);
 }
+// The collapsed card lets clicks through (CSS); a click that lands on its text should not count as empty space
+const overCard = e => { const r = card.getBoundingClientRect(); return card.classList.contains('show') && e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; };
 function pickAt(e) {
   rayAt(e);
   const targets = pickables.concat(shots.filter(s => s.mesh.visible && s.mesh.material.opacity > 0.2).map(s => s.mesh));
@@ -952,7 +961,7 @@ renderer.domElement.addEventListener('pointerup', e => {
     if (press.hit && !press.hit.object.userData.shot) {
       const id = press.hit.object.userData.id;
       if (id !== selected || exploring()) select(id);   // clicking anything in Explore focuses on it
-    } else if (!press.hit && !exploring()) setMode('explore');   // clicking empty space leaves the story and roams freely
+    } else if (!press.hit && !exploring() && !overCard(e)) setMode('explore');   // clicking empty space leaves the story and roams freely
   }
   press = null;
   renderer.domElement.style.cursor = 'default';
@@ -1153,8 +1162,8 @@ if (skipIntro || reduced) {
   flyTo(selected, 3000, true);
   setTimeout(() => intro.classList.add('gone'), 1600);
 }
-// Explore is the default; a link to one entry (?select=…) opens it in Focus
-if (params.get('mode') === 'explore' || (!params.get('select') && params.get('mode') !== 'focus')) {
+// The main link opens in Focus on the first event (South-View founded); ?mode=explore opens Explore
+if (params.get('mode') === 'explore') {
   if (flight) { controls.target.copy(flight.toT); camera.position.copy(flight.toP); }
   setMode('explore');
 }
