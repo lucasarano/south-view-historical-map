@@ -28,12 +28,12 @@ A change in the sheet shows up the next time someone opens or reloads the map.
 | Type | `Person` or `Event` | Person |
 | Dates | Shown next to the name. Write "Dates unknown" rather than guess. | 1854–1915 |
 | Year on map | Where it sits on the timeline: a single year. For a person, usually the year of the event they belong to. | 1893 |
-| One line | The first thing the card says. A sentence from the notes that makes sense on its own. | An undertaker who handled many of the earliest burials at South-View. |
-| Text from the notes | The full text from the team notes, word for word. Shown when someone opens the card. A blank line starts a new paragraph. | |
+| One line | No longer used by the map. Leave it blank, or delete the column. | |
+| Text from the notes | The full text from the team notes, word for word. The card shows its first lines, and "Learn more" opens the rest. A blank line starts a new paragraph. | |
 | Source | Book and page. | Henderson, South-View: An African American City of the Dead, p. 46 |
 | Rests at South-View | `Yes`, or where they rest instead. Blank for events. | No, Oakland Cemetery (family plot) |
 | How we know where they rest | For editors only, not shown on the map: "Stated in the team notes" or "Assumed…" (see [ADR 0004](adr/0004-assume-they-rest-at-south-view.md)). | |
-| Picture link | A direct link to a public picture (see "Pictures"). Blank means the map shows a symbol. | |
+| Picture link | A direct link to a picture, or `media/people/<file>.jpg` for a photo stored with the map (see "Pictures"). Blank means the map shows a symbol. | |
 | Picture credit | Who made it, where it's held, and that it's public domain. Shown on the card. | |
 | Show on map | `Yes` to show it, `No` to hide it without deleting it. | Yes |
 
@@ -86,13 +86,17 @@ These come from the team's decisions (`docs/adr/`):
 1. **The team notes are the source of truth** ([ADR 0001](adr/0001-team-notes-are-the-primary-source.md)). Only people and events from the notes go on the map. South-View's tour scripts and flyers are never quoted on it.
 2. **Quote the notes word for word, with the page** ([ADR 0003](adr/0003-cards-quote-the-notes.md)). Fixing a scan error is fine; list it in [content-fixes.md](content-fixes.md).
 3. **Assume a person rests at South-View unless something says otherwise** ([ADR 0004](adr/0004-assume-they-rest-at-south-view.md)). Mark it as assumed in the editors' column.
-4. **Pictures must be public and must clearly show that person or event.** If there isn't one, leave it blank and the map draws a symbol.
+4. **Pictures must be public, or South-View's own photos, and must clearly show that person or event.** If there isn't one, leave it blank and the map draws a symbol.
 
 ## Pictures
 
-- **Use only public domain or openly licensed pictures** that clearly show the person or event. Good places: [Wikimedia Commons](https://commons.wikimedia.org) (check the license on the file's page) and the [Library of Congress](https://www.loc.gov/pictures/) (look for "No known restrictions").
-- **Paste a direct link to the image file.** On Wikimedia Commons, open the file and copy the address of the "Original file" link. It starts with `https://upload.wikimedia.org/`. A link to the page around the image won't work.
-- **Fill in Picture credit:** what it shows, who made it or where it's held, and "Public domain".
+Use one of two kinds:
+
+- **South-View's own photos.** These are the best choice; Charles H. Morgan's and Albert Watts's portraits come from South-View, via Georgia Tech's Building Memories project. Most websites don't let the map draw their images, so these photos are stored with the map in `media/people/`. Adding one means a developer puts the file there and redeploys. The Picture link is then `media/people/<file>.jpg`.
+- **Public domain or openly licensed pictures** that clearly show the person or event. Good places are [Wikimedia Commons](https://commons.wikimedia.org) (check the license on the file's page) and the [Library of Congress](https://www.loc.gov/pictures/) (look for "No known restrictions"). Paste a direct link to the image file. On Wikimedia Commons, open the file and copy the address of the "Original file" link, which starts with `https://upload.wikimedia.org/`. These links work in the sheet with no developer needed.
+
+For both kinds:
+- **Fill in Picture credit:** who or what it shows, and where it comes from ("Photo courtesy of the South-View Cemetery Association", or "Library of Congress. Public domain.").
 - **Never use** photos from Find a Grave, family or funeral-home sites, or news agencies.
 
 ## Corrections from visitors

@@ -67,7 +67,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .item .yr { font-size: 12px; font-style: italic; color: var(--grey); }
 .glyph { flex: none; width: 11px; height: 11px; border: 1.2px solid var(--white); }
 .glyph.person { border-radius: 50%; }
-.glyph.event { transform: rotate(45deg) scale(.8); }
+.glyph.event { transform: scale(.85); }
 .item.on .glyph { border-color: var(--rose); }
 
 /* Info card, anchored beside the selected node */
@@ -91,9 +91,11 @@ body.still .card, body.still .arrow, body.still .badge, body.still .rip-svg * { 
 .card .more-cue:hover { border-color: rgba(212,60,103,.6); color: var(--white); }
 .card .when { font-size: 16px; font-style: italic; color: var(--grey); }
 .card p { margin: 14px 0 0; font-size: 15px; line-height: 1.55; color: #D6D6D2; }
-.card blockquote.long { margin: 14px 0 0; padding-left: 14px; border-left: 2px solid var(--hair); }
-.card blockquote.long p { margin: 0 0 10px; font-size: 15px; line-height: 1.6; color: #BEBEBA; }
-.card.open blockquote.long p { font-size: 15px; }
+.card blockquote.body { margin: 14px 0 0; padding-left: 14px; border-left: 2px solid var(--hair); }
+.card blockquote.body p { margin: 0 0 10px; font-size: 15px; line-height: 1.6; color: #D6D6D2; }
+.card blockquote.body.clamp p { margin: 0; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.card .learn { margin-top: 10px; padding: 0; font-size: 14px; font-style: italic; color: var(--white); text-decoration: underline; text-decoration-color: var(--rose); text-underline-offset: 4px; }
+.card .learn:hover { color: var(--rose); }
 .facts div.wide { grid-column: 1 / -1; }
 .facts div.wide dd { font-size: 12px; font-style: italic; color: var(--grey); }
 .card .h { font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--grey); }
@@ -153,7 +155,8 @@ body.still .card, body.still .arrow, body.still .badge, body.still .rip-svg * { 
 .arrow.show { opacity: 1; }
 .arrow:hover { border-color: rgba(212,60,103,.7); background: rgba(20,20,20,.9); }
 .arrow .chev { width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgba(255,255,255,.25); display: grid; place-items: center; flex: none; }
-.arrow .chev svg { width: 12px; height: 12px; }
+.arrow .chev { perspective: 34px; }
+.arrow .chev svg { width: 12px; height: 12px; transform-style: preserve-3d; transition: transform .18s ease; filter: drop-shadow(0 0 1.5px rgba(255,255,255,.35)); }
 .arrow .t { font-size: 13px; line-height: 1.2; }
 .arrow .s { font-size: 11px; font-style: italic; color: var(--grey); }
 .arrow.edge .chev { border-color: rgba(212,60,103,.6); }
@@ -315,7 +318,7 @@ body.exploring .year { bottom: 70px; }
     <h4>Shapes</h4>
     <ul>
       <li><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/></svg>A person</li>
-      <li><svg viewBox="0 0 20 20"><path d="M10 2.5 17.5 10 10 17.5 2.5 10Z"/></svg>An event</li>
+      <li><svg viewBox="0 0 20 20"><rect x="3.5" y="3.5" width="13" height="13"/></svg>An event</li>
       <li><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" class="rose"/></svg>The one you selected</li>
     </ul>
     <h4>Connections</h4>

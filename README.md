@@ -15,16 +15,16 @@ A 3D map of the people, events and places connected to Historic South-View Cemet
 - **Legend** (bottom right, top left on phones) starts as a small button and opens a short key to the shapes, the lines, the ripple numbers and how time is laid out.
 - **Corrections:** "Something need correcting? Send a request" (bottom left, or in any expanded card) opens the Google Form named in the content sheet's Settings tab. Answers land in the sheet's Form Responses 1 tab, and an editor makes any change by hand.
 - **Learn more:** expanded cards link to South-View's website.
-- **Shapes:** circles are people, diamonds are events. Entries with a public picture show it; the rest show a person or event symbol.
+- **Shapes:** circles are people, squares are events. Entries with a picture show it; the rest show a person or event symbol.
 - **Lines** run from one entry to another with a small arrowhead, and read as a sentence: "Lucius L. Lee *lost the pauper burial contract to* David T. Howard".
 - **Numbers** on shapes show how many steps away they are from the selected item.
 
 ## How to use it
 
-- **Focus** (default): click anything to select it. A short card appears; click the name for the full story, source and every connection. Click an arrow pill to travel. Scroll to zoom. Drag shapes and images to move them.
-- **Explore** (switch in the top bar): scroll to move through time, drag to look around. Click anything to focus on it, or press Esc to go back.
+- **Explore** (the default): scroll to move through time, drag to look around. Click anything to open its story.
+- **Focus**: the chosen entry's card shows the start of its text from the team notes; **Learn more** opens the whole text, its facts and every connection. Click a floating card to travel; its small arrow leans back for something earlier and forward for something later. Click empty space to go back to Explore. Every entry opens at the same zoom; scrolling zooms until the next click.
 - **Index** (top left): search and jump to any item.
-- **Keys:** ← → earlier and later · `/` search · Esc close.
+- **Keys:** ← → earlier and later · `/` search · Esc back.
 
 ## Run it locally
 

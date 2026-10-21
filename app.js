@@ -122,17 +122,17 @@ function filled(shape, r) {
 }
 const OUTLINE = {
   person: new THREE.RingGeometry(R - 0.16, R, 96),
-  event: new THREE.ShapeGeometry(ringShape(SIZE.event, SIZE.event - 0.23, 4, Math.PI / 2)),
+  event: new THREE.ShapeGeometry(ringShape(SIZE.event, SIZE.event - 0.23, 4, Math.PI / 4)),
   place: new THREE.ShapeGeometry(ringShape(SIZE.place, SIZE.place - 0.22, 4, Math.PI / 4)),
 };
 const FILL = {
   person: new THREE.CircleGeometry(R - 0.1, 64),
-  event: new THREE.ShapeGeometry(new THREE.Shape(poly(SIZE.event - 0.05, 4, Math.PI / 2))),
+  event: new THREE.ShapeGeometry(new THREE.Shape(poly(SIZE.event - 0.05, 4, Math.PI / 4))),
   place: new THREE.ShapeGeometry(new THREE.Shape(poly(SIZE.place - 0.05, 4, Math.PI / 4))),
 };
 const PHOTO = {
   person: new THREE.CircleGeometry(R - 0.12, 64),
-  event: filled(new THREE.Shape(poly(SIZE.event - 0.12, 4, Math.PI / 2)), SIZE.event - 0.12),
+  event: filled(new THREE.Shape(poly(SIZE.event - 0.12, 4, Math.PI / 4)), SIZE.event - 0.12),
   place: filled(new THREE.Shape(poly(SIZE.place - 0.12, 4, Math.PI / 4)), SIZE.place - 0.12),
 };
 const HALO = new THREE.RingGeometry(R * 1.85 - 0.09, R * 1.85, 128);
@@ -169,8 +169,8 @@ function drawSymbol(x, type, cx, cy, size) {
     x.quadraticCurveTo(cx - size * 0.32, cy + size * 0.02, cx, cy + size * 0.02);   // shoulders
     x.quadraticCurveTo(cx + size * 0.32, cy + size * 0.02, cx + size * 0.32, cy + size * 0.42);
   } else {
-    const r = size * 0.3;
-    x.moveTo(cx, cy - r); x.lineTo(cx + r, cy); x.lineTo(cx, cy + r); x.lineTo(cx - r, cy); x.closePath();
+    const r = size * 0.24;                                                     // a square, like the event's own shape
+    x.rect(cx - r, cy - r, r * 2, r * 2);
     x.moveTo(cx + size * 0.07, cy); x.arc(cx, cy, size * 0.07, 0, Math.PI * 2);
   }
   x.stroke();
@@ -394,7 +394,8 @@ let zoomGoal = null;                                 // distance from the focus;
 function flyTo(id, dur = 2200, fromFar = false) {
   if (calm()) { dur = 1; fromFar = false; }          // reduced motion: jump straight there
   const target = items.get(id).pos.clone();
-  const toP = target.clone().add(viewVec().setLength(zoomGoal ?? viewVec().length()));
+  zoomGoal = null;                                     // every choice lands at the same distance; scroll-zooming lasts until the next one
+  const toP = target.clone().add(viewVec());
   const fromP = fromFar ? toP.clone().add(new THREE.Vector3(30, 40, 420)) : camera.position.clone();
   flight = { t0: performance.now(), dur, fromT: fromFar ? target.clone().add(new THREE.Vector3(0, 0, 200)) : controls.target.clone(), toT: target, fromP, toP };
 }
@@ -439,7 +440,8 @@ overlay.appendChild(card);
 let arrows = [];
 let obstacles = [];
 
-const ARROW_SVG = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h8M6.5 2.5 10 6l-3.5 3.5"/></svg>';
+// A small solid arrow: its filled head foreshortens when it leans into or out of the screen, so the 3D tilt reads
+const ARROW_SVG = '<svg viewBox="0 0 12 12"><path d="M1.5 6h5.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 2.4 11.2 6 6 9.6z" fill="currentColor"/></svg>';
 const glyph = type => `<i class="glyph ${type}"></i>`;
 
 function ringsSummary() {
@@ -463,15 +465,17 @@ function renderCard() {
     : 'No documented connections yet.';
 
   card.classList.toggle('open', detail);
-  // Collapsed: the essentials and one line of ripple. Everything else appears when the name is clicked.
+  // Collapsed: the opening of the notes' text and "Learn more". Open: the whole text, facts and connections.
+  const paras = (n.text || '').split(/\n\s*\n/).filter(t => t.trim());
+  const body = paras.length ? `<blockquote class="body${detail ? '' : ' clamp'}">${(detail ? paras : paras.slice(0, 1)).map(t => `<p>${esc(t)}</p>`).join('')}</blockquote>` : '';
   card.innerHTML = `
     <div class="grip" aria-hidden="true"></div>
     <div class="kind"><i></i>${TYPE[n.type]}<button class="more-cue" id="cue" aria-expanded="${detail}">${detail ? 'Less' : 'More'}</button></div>
     <button class="name" id="name" aria-expanded="${detail}" title="${detail ? 'Show less' : 'More about ' + n.name}">${titleOf(n)}</button>
     ${subOf(n) ? `<div class="when">${subOf(n)}</div>` : ''}
-    ${n.one && !(detail && n.text && n.text.startsWith(n.one)) ? `<p>${esc(n.one)}</p>` : ''}
-    ${detail ? `${n.text && n.text !== n.one ? `<blockquote class="long">${n.text.split(/\n\s*\n/).map(t => `<p>${esc(t)}</p>`).join('')}</blockquote>` : ''}
-    <dl class="facts">
+    ${body}
+    ${paras.length && !detail ? `<button class="learn" id="learn" aria-expanded="false">Learn more</button>` : ''}
+    ${detail ? `<dl class="facts">
       <div><dt>${n.type === 'person' ? 'Lived' : 'When'}</dt><dd>${esc(n.dates)}</dd></div>
       ${n.rests ? `<div><dt>Rests at South-View</dt><dd>${esc(n.rests)}</dd></div>` : ''}
       <div><dt>Source</dt><dd>${esc(n.source || 'Team notes')}</dd></div>
@@ -484,13 +488,14 @@ function renderCard() {
       <ul class="legend">${legend}</ul>
       <p class="reach">${reach}</p>
     </div>
-    <div class="links"><a href="${esc(settings['Learn more link'] || 'https://southviewcemetery.com/')}" target="_blank" rel="noopener">Learn more at South-View ↗</a><button id="card-fix">Suggest a correction</button></div>`
+    <div class="links"><a href="${esc(settings['Learn more link'] || 'https://southviewcemetery.com/')}" target="_blank" rel="noopener">South-View's website ↗</a><button id="card-fix">Suggest a correction</button></div>`
     : `<div class="rip simple"><b class="h">Ripple of influence</b><p class="reach">${reach}</p></div>
     ${isMobile() ? connList('mob-conns', 'Travel to') : ''}`}`;
   card.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { radius = +b.dataset.r; renderCard(); syncUrl(); });
   card.querySelectorAll('.conn').forEach(b => b.onclick = () => select(b.dataset.id));
   card.querySelector('#card-fix')?.addEventListener('click', () => openFix(selected));
   card.querySelector('#name').onclick = card.querySelector('#cue').onclick = () => { detail = !detail; renderCard(); syncUrl(); };
+  card.querySelector('#learn')?.addEventListener('click', () => { detail = true; renderCard(); syncUrl(); });
 }
 function fadeCardIn() {
   card.classList.remove('show');
@@ -728,7 +733,10 @@ function layoutOverlay(now, dt) {
       a.el.classList.toggle('edge', a.off);
       a.el.classList.toggle('show', !flight);
       const d = arrowDir(a, S);
-      a.el.querySelector('svg').style.transform = `rotate(${Math.atan2(d.dy, d.dx)}rad)`;
+      // 3D: the arrow leans into the screen when the destination is earlier (further back in time)
+      // and out toward you when it is later; the flat 2D map has no depth, so it stays flat there
+      const dy = reduced ? 0 : Math.sign(byId.get(a.id).year - S.n.year);
+      a.el.querySelector('svg').style.transform = `rotate(${Math.atan2(d.dy, d.dx)}rad) rotateY(${dy * -58}deg)`;
       obstacles.push({ x1: a.x - a.w / 2 - 6, x2: a.x + a.w / 2 + 6, y1: a.y - a.h / 2 - 6, y2: a.y + a.h / 2 + 6 });
     }
   }
@@ -944,7 +952,7 @@ renderer.domElement.addEventListener('pointerup', e => {
     if (press.hit && !press.hit.object.userData.shot) {
       const id = press.hit.object.userData.id;
       if (id !== selected || exploring()) select(id);   // clicking anything in Explore focuses on it
-    }
+    } else if (!press.hit && !exploring()) setMode('explore');   // clicking empty space leaves the story and roams freely
   }
   press = null;
   renderer.domElement.style.cursor = 'default';
@@ -1145,7 +1153,8 @@ if (skipIntro || reduced) {
   flyTo(selected, 3000, true);
   setTimeout(() => intro.classList.add('gone'), 1600);
 }
-if (params.get('mode') === 'explore') {
+// Explore is the default; a link to one entry (?select=…) opens it in Focus
+if (params.get('mode') === 'explore' || (!params.get('select') && params.get('mode') !== 'focus')) {
   if (flight) { controls.target.copy(flight.toT); camera.position.copy(flight.toP); }
   setMode('explore');
 }
