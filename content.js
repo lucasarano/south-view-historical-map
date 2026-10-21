@@ -65,7 +65,7 @@ export async function loadContent() {
       type: /event/i.test(r['Type']) ? 'event' : 'person',
       dates: r['Dates'],
       year: Number(r['Year on map']) || firstYear(r['Dates']),
-      text: r['Text from the notes'], source: r['Source'],
+      text: r['Body'] ?? r['Text from the notes'] ?? '', source: r['Source'],   // the column was called "Text from the notes" before 2026-10-21
       rests: r['Rests at South-View'],
       picture: r['Picture link'], credit: r['Picture credit'],
     };
