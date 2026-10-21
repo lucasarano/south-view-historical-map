@@ -158,7 +158,7 @@ function drawCover(x, im, w, h) {
   x.filter = 'none';
 }
 const texCache = new Map();
-function canvasTex(c) { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; }
+function canvasTex(c) { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; }
 // Square texture shown inside the node itself
 function drawSymbol(x, type, cx, cy, size) {
   x.strokeStyle = '#8c8c88'; x.fillStyle = '#8c8c88'; x.lineWidth = size * 0.06; x.lineCap = 'round';
@@ -190,8 +190,9 @@ async function shotTexture(src, n) {
   const id = 'shot:' + src;
   if (texCache.has(id)) return texCache.get(id);
   await document.fonts.ready;
-  const c = document.createElement('canvas'); c.width = 512; c.height = 400;
+  const c = document.createElement('canvas'); c.width = 1024; c.height = 800;   // twice the drawing size, so edges stay crisp
   const x = c.getContext('2d');
+  x.scale(2, 2);
   const IH = 340, rr = 10;
   x.save(); x.beginPath(); x.roundRect(2, 2, 508, IH - 4, rr); x.clip();
   x.fillStyle = '#0d0d0d'; x.fillRect(0, 0, 512, IH);
@@ -513,13 +514,13 @@ let shots = [];
 function renderShots() {
   for (const sh of shots) scene.remove(sh.mesh);
   const S = items.get(selected), n = S.n;
-  let dist = SIZE[n.type] * SEL_SCALE + SHOT_W * 0.62 + 6;
+  let dist = SIZE[n.type] * SEL_SCALE + SHOT_W * 0.55 + 1.5;
   const spread = [-0.95, 0, 0.95];                     // equal spacing: three spots on one arc
   // Choose the arc once: on the card's far side, rotated to where it overlaps the fewest shapes
   const base = cardSide > 0 ? Math.PI : 0;
   const near = [...items.values()].filter(it => it !== S && Math.abs(it.pos.z - S.pos.z) < 60);
   let best = base, bestCost = Infinity, bestDist = dist;
-  for (const grow of [1, 1.3, 1.6]) for (let k = -6; k <= 6; k++) {
+  for (const grow of [1, 1.15, 1.3]) for (let k = -6; k <= 6; k++) {
     const rot = base + k * 0.12, d0 = dist * grow;
     let cost = Math.abs(k) * 0.4 + (grow - 1) * 6;     // prefer close and straight-out
     for (const sp of spread) {
@@ -852,6 +853,20 @@ const indexEl = document.getElementById('index'), menu = document.getElementById
 function openIndex() { indexEl.classList.add('open'); menu.setAttribute('aria-expanded', 'true'); document.body.classList.add('index-open'); }
 function closeIndex() { indexEl.classList.remove('open'); menu.setAttribute('aria-expanded', 'false'); document.body.classList.remove('index-open'); }
 
+/* ---------- Lightbox: a picture shown large, in full color, with its credit. Click outside it, the ×, or Esc to close. ---------- */
+const lightbox = document.getElementById('lightbox');
+function openLightbox(n) {
+  if (!n || !n.picture) return;
+  const img = lightbox.querySelector('img');
+  img.src = n.picture; img.alt = n.name;
+  lightbox.querySelector('.lb-name').textContent = n.name;
+  lightbox.querySelector('.lb-credit').textContent = n.credit || '';
+  lightbox.classList.add('open');
+  lightbox.querySelector('.lb-close').focus();
+}
+function closeLightbox() { lightbox.classList.remove('open'); }
+lightbox.addEventListener('click', e => { if (e.target === lightbox || e.target.closest('.lb-close')) closeLightbox(); });
+
 /* ---------- Legend: starts as a small button, opens a short key ---------- */
 const legendEl = document.getElementById('legend'), legendBtn = document.getElementById('legend-btn');
 function setLegend(open) {
@@ -961,12 +976,15 @@ renderer.domElement.addEventListener('pointerup', e => {
     if (press.hit && !press.hit.object.userData.shot) {
       const id = press.hit.object.userData.id;
       if (id !== selected || exploring()) select(id);   // clicking anything in Explore focuses on it
-    } else if (!press.hit && !exploring() && !overCard(e)) setMode('explore');   // clicking empty space leaves the story and roams freely
+      else if (byId.get(id).picture) openLightbox(byId.get(id));   // clicking the chosen shape again shows its picture large
+    } else if (press.hit && press.hit.object.userData.shot) openLightbox(byId.get(selected));
+    else if (!press.hit && !exploring() && !overCard(e)) setMode('explore');   // clicking empty space leaves the story and roams freely
   }
   press = null;
   renderer.domElement.style.cursor = 'default';
 });
 addEventListener('keydown', e => {
+  if (e.key === 'Escape' && lightbox.classList.contains('open')) return closeLightbox();
   if (e.key === 'Escape' && fixEl.classList.contains('open')) return closeFix();
   if (e.key === 'Escape' && legendEl.classList.contains('open')) return setLegend(false);
   if (e.key === 'Escape') { if (exploring()) setMode('focus'); else if (detail) { detail = false; renderCard(); syncUrl(); } return closeIndex(); }
