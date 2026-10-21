@@ -28,11 +28,9 @@ A change in the sheet shows up the next time someone opens or reloads the map.
 | Type | `Person` or `Event` | Person |
 | Dates | Shown next to the name. Write "Dates unknown" rather than guess. | 1854–1915 |
 | Year on map | Where it sits on the timeline: a single year. For a person, usually the year of the event they belong to. | 1893 |
-| One line | No longer used by the map. Leave it blank, or delete the column. | |
-| Text from the notes | The full text from the team notes, word for word. The card shows its first lines, and "Learn more" opens the rest. A blank line starts a new paragraph. | |
+| Body | The text from the team notes, word for word. The card shows its first lines, and "Learn more" (or "More") opens the rest. A blank line starts a new paragraph. Blank for events. | |
 | Source | Book and page. | Henderson, South-View: An African American City of the Dead, p. 46 |
 | Rests at South-View | `Yes`, or where they rest instead. Blank for events. | No, Oakland Cemetery (family plot) |
-| How we know where they rest | For editors only, not shown on the map: "Stated in the team notes" or "Assumed…" (see [ADR 0004](adr/0004-assume-they-rest-at-south-view.md)). | |
 | Picture link | A direct link to a picture, or `media/people/<file>.jpg` for a photo stored with the map (see "Pictures"). Blank means the map shows a symbol. | |
 | Picture credit | Who made it, where it's held, and that it's public domain. Shown on the card. | |
 | Show on map | `Yes` to show it, `No` to hide it without deleting it. | Yes |
@@ -59,7 +57,7 @@ A change in the sheet shows up the next time someone opens or reloads the map.
 **Fix a typo or a date.** Edit the cell. That's all.
 
 **Add a person.**
-1. Add a row to Entries: Name, `Person`, Dates, Year on map, One line, Text from the notes, Source, Rests at South-View, `Yes` under Show on map.
+1. Add a row to Entries: Name, `Person`, Dates, Year on map, Body, Source, Rests at South-View, `Yes` under Show on map.
 2. Add a row to Connections linking them to their event, for example "*Name* · part of · *Panic of 1893*".
 3. Reload the map and find them in the Index.
 
@@ -74,7 +72,7 @@ A change in the sheet shows up the next time someone opens or reloads the map.
 The sheet is the only thing to update; nothing else feeds the map.
 
 1. Add the new facts to the sheet: new rows in Entries, new lines in Connections, or a corrected cell.
-2. Quote the research word for word in "Text from the notes", with the book and page in Source.
+2. Quote the research word for word in Body, with the book and page in Source.
 3. Optionally, keep the team's own record in step by adding the same text to `sources/team-notes.md`. The map doesn't read that file; it's the archive.
 
 The files in `sources/` (the team notes and South-View's scripts and flyers) are reference only. Editing them changes nothing on the map.
@@ -85,7 +83,7 @@ These come from the team's decisions (`docs/adr/`):
 
 1. **The team notes are the source of truth** ([ADR 0001](adr/0001-team-notes-are-the-primary-source.md)). Only people and events from the notes go on the map. South-View's tour scripts and flyers are never quoted on it.
 2. **Quote the notes word for word, with the page** ([ADR 0003](adr/0003-cards-quote-the-notes.md)). Fixing a scan error is fine; list it in [content-fixes.md](content-fixes.md).
-3. **Assume a person rests at South-View unless something says otherwise** ([ADR 0004](adr/0004-assume-they-rest-at-south-view.md)). Mark it as assumed in the editors' column.
+3. **Assume a person rests at South-View unless something says otherwise** ([ADR 0004](adr/0004-assume-they-rest-at-south-view.md)). [ADR 0004](adr/0004-assume-they-rest-at-south-view.md) lists whose burial is assumed.
 4. **Pictures must be public, or South-View's own photos, and must clearly show that person or event.** If there isn't one, leave it blank and the map draws a symbol.
 
 ## Pictures

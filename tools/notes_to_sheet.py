@@ -189,9 +189,10 @@ CONNECTIONS = [(f, 'co-founded', 'South-View founded') for f in
     ('Irene Dobbs Jackson', 'part of', 'Civil Rights Movement'),
 ]
 
-ENTRY_COLS = ['Name', 'Type', 'Dates', 'Year on map', 'One line', 'Text from the notes', 'Source',
-              'Rests at South-View', 'How we know where they rest', 'Picture link', 'Picture credit', 'Show on map']
-rows = [[e['name'], e['type'], e['dates'], e['year'], e['one'], e['text'], e['source'], e['rests'], e['how'], e['pic'], e['credit'], 'Yes']
+# Columns as of 2026-10-21 (One line and "How we know where they rest" were dropped; the text column is Body)
+ENTRY_COLS = ['Name', 'Type', 'Dates', 'Year on map', 'Body', 'Source',
+              'Rests at South-View', 'Picture link', 'Picture credit', 'Show on map']
+rows = [[e['name'], e['type'], e['dates'], e['year'], e['text'], e['source'], e['rests'], e['pic'], e['credit'], 'Yes']
         for e in EVENTS + P]
 names = {r[0] for r in rows}
 for a, _, b in CONNECTIONS:
