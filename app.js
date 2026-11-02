@@ -219,14 +219,6 @@ async function shotTexture(src, n) {
 }
 
 /* ---------- Nodes ---------- */
-// An incomplete entry is drawn with a dashed outline
-function dashedOutline(type) {
-  const round = type === 'person', pts = poly(SIZE[type], round ? 64 : 4, round ? 0 : Math.PI / 4);
-  const dashed = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts.map(p => new THREE.Vector3(p.x, p.y, 0))),
-    new THREE.LineDashedMaterial({ color: WHITE, transparent: true, depthWrite: false, dashSize: 0.75, gapSize: 0.55 }));
-  dashed.computeLineDistances();
-  return dashed;
-}
 const items = new Map();
 const pickables = [];
 nodes.forEach((n, i) => {
@@ -239,7 +231,7 @@ nodes.forEach((n, i) => {
   const photo = new THREE.Mesh(PHOTO[n.type], new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
   photo.position.z = 0.01;
   photo.visible = false;
-  const line = n.missing.length ? dashedOutline(n.type) : new THREE.Mesh(OUTLINE[n.type], new THREE.MeshBasicMaterial({ color: WHITE, transparent: true, depthWrite: false }));
+  const line = new THREE.Mesh(OUTLINE[n.type], new THREE.MeshBasicMaterial({ color: WHITE, transparent: true, depthWrite: false }));
   line.position.z = 0.02;
   const halo = new THREE.Mesh(HALO, new THREE.MeshBasicMaterial({ color: ROSE, transparent: true, opacity: 0, depthWrite: false }));
   group.add(fill, photo, line, halo);
