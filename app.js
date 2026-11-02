@@ -1,22 +1,22 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/CSS2DRenderer.js';
-import { loadContent } from './content.js';
+import { loadContent, splitSources } from './content.js';
 
 // Everything shown comes from the content sheet (content.js, docs/MAINTENANCE.md)
 const { nodes, links, settings, START_YEAR, END_YEAR } = await loadContent();
 const T0 = START_YEAR - 4, T1 = END_YEAR + 2;   // the time rail runs a little past the first and last years
 // Text from the content sheet is shown as text, never as HTML
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-// One list item per source. A sheet cell holds them one per line or run together as "1. … 2. …"; *stars* mark titles.
-const sourceList = s => `<ol class="sources">${String(s).split(/\n+|\s{2,}(?=\d+\.\s)/).map(t => t.replace(/^\s*\d+\.\s+/, '').trim()).filter(Boolean).map(t =>
+// One list item per source; *stars* mark titles
+const sourceList = s => `<ol class="sources">${splitSources(s).map(t =>
   `<li>${esc(t).replace(/\*([^*]+)\*/g, '<i>$1</i>').replace(/\b(?:https?:\/\/|www\.)[^\s<]+/g, u => {
     const url = u.replace(/[.,;)]+$/, '');
     return `<a href="${url.startsWith('http') ? url : 'https://' + url}" target="_blank" rel="noopener">${url}</a>${u.slice(url.length)}`;
   })}</li>`).join('')}</ol>`;
 
 /* ---------- Constants ---------- */
-const DEPTH = 2.2;                                   // world units per year (time lives on the z axis only)
+const DEPTH = 5;                                     // world units per year (time lives on the z axis only)
 const Z = year => (year - START_YEAR) * DEPTH;       // later years sit further forward, nearer the viewer
 const YEAR_AT = z => START_YEAR + z / DEPTH;
 const WHITE = 0xF2F2F0, ROSE = 0xD43C67;
@@ -25,7 +25,8 @@ const R = 3;                                         // node radius
 const SIZE = { person: R, event: R * 1.3, place: R * 1.2 };   // outer radius per shape
 const SEL_SCALE = 1.7;                               // the selected shape grows to frame its photo
 const VIEW = new THREE.Vector3(20, 12, 115);         // camera sits slightly in the future, looking back in time
-const FADE_NEAR = 16, FADE_FAR = 46;                 // years: fully visible → gone
+const FADE_NEAR = 8, FADE_FAR = 22;                  // years: fully visible → gone
+const IN_VIEW = (FADE_NEAR + FADE_FAR) / 2;          // years either side of the focus that count as in view: half faded at the edge
 const TYPE = { person: 'Person', event: 'Event', place: 'Place' };
 const SEG = 48;                                      // ribbon segments
 const mobileQ = matchMedia('(max-width: 760px)');
@@ -67,7 +68,7 @@ function hopsFrom(id) {
 const stage = document.getElementById('stage');
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
-const FOG = new THREE.FogExp2(0x000000, 0.0042);   // the flat 2D graph has no depth, so no fog
+const FOG = new THREE.FogExp2(0x000000, 0.003);   // the flat 2D graph has no depth, so no fog
 scene.fog = FOG;
 
 const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.5, 3000);
@@ -216,6 +217,14 @@ async function shotTexture(src, n) {
 }
 
 /* ---------- Nodes ---------- */
+// An incomplete entry is drawn with a dashed outline
+function dashedOutline(type) {
+  const round = type === 'person', pts = poly(SIZE[type], round ? 64 : 4, round ? 0 : Math.PI / 4);
+  const dashed = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts.map(p => new THREE.Vector3(p.x, p.y, 0))),
+    new THREE.LineDashedMaterial({ color: WHITE, transparent: true, depthWrite: false, dashSize: 0.75, gapSize: 0.55 }));
+  dashed.computeLineDistances();
+  return dashed;
+}
 const items = new Map();
 const pickables = [];
 nodes.forEach((n, i) => {
@@ -228,7 +237,7 @@ nodes.forEach((n, i) => {
   const photo = new THREE.Mesh(PHOTO[n.type], new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
   photo.position.z = 0.01;
   photo.visible = false;
-  const line = new THREE.Mesh(OUTLINE[n.type], new THREE.MeshBasicMaterial({ color: WHITE, transparent: true, depthWrite: false }));
+  const line = n.missing.length ? dashedOutline(n.type) : new THREE.Mesh(OUTLINE[n.type], new THREE.MeshBasicMaterial({ color: WHITE, transparent: true, depthWrite: false }));
   line.position.z = 0.02;
   const halo = new THREE.Mesh(HALO, new THREE.MeshBasicMaterial({ color: ROSE, transparent: true, opacity: 0, depthWrite: false }));
   group.add(fill, photo, line, halo);
@@ -237,7 +246,7 @@ nodes.forEach((n, i) => {
 
   const el = document.createElement('div');
   el.className = 'lbl';
-  el.innerHTML = `<div class="in"><div class="n">${titleOf(n)}</div>${subOf(n) ? `<div class="w">${subOf(n)}</div>` : ''}</div>`;
+  el.innerHTML = `<div class="in"><div class="n">${titleOf(n)}</div>${subOf(n) ? `<div class="w">${subOf(n)}</div>` : ''}${n.missing.length ? '<div class="w inc">Incomplete</div>' : ''}</div>`;
   el.addEventListener('click', () => select(n.id));
   const lbl = new CSS2DObject(el);
   lbl.position.copy(pos);
@@ -482,6 +491,7 @@ function renderCard() {
     <div class="kind"><i></i>${TYPE[n.type]}<button class="more-cue" id="cue" aria-expanded="${detail}">${detail ? 'Less' : 'More'}</button></div>
     <button class="name" id="name" aria-expanded="${detail}" title="${detail ? 'Show less' : 'More about ' + n.name}">${titleOf(n)}</button>
     ${subOf(n) ? `<div class="when">${subOf(n)}</div>` : ''}
+    ${n.missing.length ? `<div class="inc-note"><b>Incomplete</b>Still needs ${new Intl.ListFormat('en').format(n.missing)}. <button id="inc-fix">Know more? Tell us</button></div>` : ''}
     ${body}
     ${!detail ? `<button class="learn" id="learn" aria-expanded="false">Learn more</button>` : ''}
     ${detail ? `<dl class="facts">
@@ -502,7 +512,7 @@ function renderCard() {
     ${isMobile() ? connList('mob-conns', 'Travel to') : ''}`}`;
   card.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { radius = +b.dataset.r; renderCard(); syncUrl(); });
   card.querySelectorAll('.conn').forEach(b => b.onclick = () => select(b.dataset.id));
-  card.querySelector('#card-fix')?.addEventListener('click', () => openFix(selected));
+  card.querySelectorAll('#card-fix, #inc-fix').forEach(b => b.addEventListener('click', () => openFix(selected)));
   card.querySelector('#name').onclick = card.querySelector('#cue').onclick = () => { detail = !detail; renderCard(); syncUrl(); };
   card.querySelector('#learn')?.addEventListener('click', () => { detail = true; renderCard(); syncUrl(); });
 }
@@ -1151,10 +1161,10 @@ function tick(now) {
     tk.el.style.opacity = tk.op.toFixed(3);
     if (tk.vis) taken.push(r);
   }
-  if (exploring()) {
-    const y = Math.round(focusYear);
-    if (y !== shownYear) { shownYear = y; yearEl.textContent = y; }
-  }
+  // The readout names the years in view, not one year. The flat graph shows every year, so there it's what fits on screen.
+  const span = reduced ? camera.position.distanceTo(controls.target) * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect / XS : IN_VIEW;
+  const range = `${Math.max(START_YEAR, Math.round(focusYear - span))}–${Math.min(END_YEAR, Math.round(focusYear + span))}`;
+  if (range !== shownYear) { shownYear = range; yearEl.textContent = range; }
 
   renderer.render(scene, camera);
   labelRenderer.render(scene, camera);

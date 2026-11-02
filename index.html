@@ -83,8 +83,8 @@ body.still .card, body.still .arrow, body.still .badge, body.still .rip-svg * { 
 .facts div:last-child { grid-column: 1 / -1; }
 .facts dt { font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--dim); }
 .facts dd { margin: 4px 0 0; font-size: 14px; color: #D6D6D2; }
-.year { position: fixed; right: 30px; bottom: 26px; z-index: 4; font-size: 44px; font-style: italic; color: var(--white); opacity: 0; transition: opacity .8s ease; pointer-events: none; letter-spacing: .02em; }
-.year::before { content: 'Year'; display: block; font-size: 11px; font-style: normal; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--dim); text-align: right; margin-bottom: 4px; }
+.year { position: fixed; right: 30px; bottom: 26px; z-index: 4; font-size: 44px; font-style: italic; color: var(--white); pointer-events: none; letter-spacing: .02em; }
+.year::before { content: 'Years in view'; display: block; font-size: 11px; font-style: normal; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--dim); text-align: right; margin-bottom: 4px; }
 .card .kind { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--grey); }
 .card .kind i { width: 16px; height: 1px; background: var(--rose); display: inline-block; }
 .card .name { display: block; margin: 10px 0 4px; text-align: left; font-size: 34px; line-height: 1.04; letter-spacing: -.005em; color: var(--white); }
@@ -92,6 +92,10 @@ body.still .card, body.still .arrow, body.still .badge, body.still .rip-svg * { 
 .card .more-cue { margin-left: auto; padding: 3px 11px; border: 1px solid var(--hair); border-radius: 999px; font-size: 12px; font-weight: 400; font-style: italic; letter-spacing: 0; text-transform: none; color: var(--grey); transition: border-color .3s, color .3s; }
 .card .more-cue:hover { border-color: rgba(212,60,103,.6); color: var(--white); }
 .card .when { font-size: 16px; font-style: italic; color: var(--grey); }
+.inc-note { margin-top: 10px; padding: 8px 11px; border: 1px dashed rgba(242,242,240,.4); border-radius: 8px; font-size: 13px; line-height: 1.4; color: #D6D6D2; }
+.inc-note b { display: block; margin-bottom: 2px; font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--white); }
+.inc-note button { padding: 0; font: inherit; font-style: italic; color: var(--white); text-decoration: underline; text-decoration-color: var(--rose); text-underline-offset: 2px; }
+.lbl .w.inc { font-style: normal; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
 .card p { margin: 14px 0 0; font-size: 15px; line-height: 1.55; color: #D6D6D2; }
 /* A picture shown large: click outside it, the ×, or Esc to close */
 .lightbox { position: fixed; inset: 0; z-index: 40; display: none; align-items: center; justify-content: center; padding: 24px; background: rgba(0,0,0,.82); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
@@ -189,7 +193,6 @@ body.still .card, body.still .arrow, body.still .badge, body.still .rip-svg * { 
 .explore-hint { opacity: 0; pointer-events: none; }
 body.exploring .hint:not(.explore-hint) { opacity: 0 !important; }
 body.exploring .explore-hint { opacity: 1; }
-body.exploring .year { opacity: 1; }
 body.exploring .card, body.exploring .arrow, body.exploring .badge { opacity: 0 !important; pointer-events: none !important; }
 
 /* Reduce motion (2D) toggle */
@@ -245,7 +248,7 @@ body.index-open .fix-link { left: 340px; }
 .legend-panel .t2, body.reduced .legend-panel .t3 { display: none; }
 body.reduced .legend-panel .t2 { display: block; }
 .lg-badge { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 1.4px solid var(--rose); display: grid; place-items: center; font-size: 11px; color: var(--white); }
-body.exploring .year { bottom: 70px; }
+.year { bottom: 70px; }
 
 /* Time axis ticks */
 .tick { font-size: 12px; font-style: italic; color: var(--dim); letter-spacing: .04em; white-space: nowrap; pointer-events: none; }
@@ -279,7 +282,6 @@ body.exploring .year { bottom: 70px; }
   .legend-box { top: 80px; bottom: auto; right: auto; left: 12px; flex-direction: column-reverse; align-items: flex-start; }
   .legend-btn { height: 30px; }
   .legend-panel { width: min(290px, calc(100vw - 24px)); max-height: 50vh; }
-  body.exploring .year { bottom: auto; }
   .fix { left: 10px; right: 10px; width: auto; bottom: 10px; }
   .index { top: 78px; left: 10px; right: 10px; bottom: auto; max-height: 70vh; width: auto; }
   .card, .card.open { pointer-events: auto; position: fixed; left: 0; right: 0; bottom: 0; top: auto; width: auto; max-height: 46vh; overflow: auto; padding: 10px 18px calc(18px + env(safe-area-inset-bottom)); border-radius: 18px 18px 0 0; border: 0; border-top: 1px solid var(--hair); background: rgba(8,8,8,.94); transform: none !important; }
@@ -290,7 +292,7 @@ body.exploring .year { bottom: 70px; }
   .mob-conns { display: grid; }
   .arrow { display: none; }
   .hint { display: none; }
-  .year { top: 80px; bottom: auto; right: 14px; font-size: 32px; }
+  .year { top: 80px; bottom: auto; right: 14px; font-size: 24px; }
   .word b { display: none; }
   .modeswitch button { height: 28px; min-height: 28px; padding: 0 10px; }
   .explore-hint { display: block; bottom: calc(18px + env(safe-area-inset-bottom)); font-size: 12px; white-space: normal; width: 90%; text-align: center; }
@@ -339,6 +341,7 @@ body.exploring .year { bottom: 70px; }
     <ul>
       <li><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/></svg>A person</li>
       <li><svg viewBox="0 0 20 20"><rect x="3.5" y="3.5" width="13" height="13"/></svg>An event</li>
+      <li><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke-dasharray="3 2.5"/></svg>Incomplete: its story, dates or sources are still being gathered</li>
       <li><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" class="rose"/></svg>The one you selected</li>
     </ul>
     <h4>Connections</h4>

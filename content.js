@@ -42,6 +42,20 @@ async function readAll(url) {
   return { entries, connections, settings };
 }
 
+// A Source cell holds one source per line, or runs them together as "1. … 2. …"
+export const splitSources = s => String(s || '').split(/\n+|\s{2,}(?=\d+\.\s)/).map(t => t.replace(/^\s*\d+\.\s+/, '').trim()).filter(Boolean);
+const NEEDS_SOURCES = { event: 3, person: 1 };
+
+// What an entry still lacks, in plain words. Nothing is hidden for being incomplete: the map says so instead.
+function missingFrom(n) {
+  const missing = [], need = NEEDS_SOURCES[n.type] ?? 1;
+  const have = splitSources(n.source).filter(s => !/^team notes\.?$/i.test(s)).length;
+  if (!n.text.trim()) missing.push(n.type === 'event' ? 'a written history' : 'a written story');
+  if (!n.dates || /unknown/i.test(n.dates)) missing.push('dates');
+  if (have < need) missing.push(need > 1 ? `${need - have} more source${need - have > 1 ? 's' : ''}` : 'a source');
+  return missing;
+}
+
 const slug = s => s.toLowerCase().normalize('NFKD').replace(/[^\w\s-]/g, '').trim().replace(/[\s_-]+/g, '-');
 const yes = v => !/^(no|n|false|hide|hidden)$/i.test(v || '');
 const firstYear = s => { const m = String(s || '').match(/\b(1[6-9]\d\d|20\d\d)\b/); return m ? +m[1] : NaN; };
@@ -92,7 +106,7 @@ export async function loadContent() {
   }
   const placed = nodes.filter(n => n.year);
   for (const n of nodes) if (!n.year) console.warn('Left off the map, no year:', n.name);
-  for (const n of placed) n.dates = n.dates || String(n.year);
+  for (const n of placed) { n.missing = missingFrom(n); n.dates = n.dates || String(n.year); }
   layout(placed, links);
 
   const settings = Object.fromEntries(raw.settings.map(s => [s['Setting'], s['Value']]));

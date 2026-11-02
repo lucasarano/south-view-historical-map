@@ -37,6 +37,8 @@ A change in the sheet shows up the next time someone opens or reloads the map.
 
 A name that appears on two rows makes one card: the second row's Body and Source are added to the first row's.
 
+Nothing is hidden for being incomplete. A row with no Body, unknown dates, or too few sources (events need 3, people need 1; "Team notes" doesn't count) gets a dashed outline and an "Incomplete" note on its card saying what's missing. Fill in the sheet and the note goes away by itself.
+
 ## The Connections tab: one row per line between two entries
 
 | From | Connection | To |
