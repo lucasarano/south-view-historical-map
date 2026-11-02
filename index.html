@@ -244,6 +244,7 @@ body.index-open .fix-link { left: 340px; }
 body.reduced .legend-panel .t2 { display: block; }
 .lg-badge { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 1.4px solid var(--rose); display: grid; place-items: center; font-size: 11px; color: var(--white); }
 .year { bottom: 70px; }
+body.legend-open .year { opacity: 0; }
 
 /* Time axis ticks */
 .tick { font-size: 12px; font-style: italic; color: var(--dim); letter-spacing: .04em; white-space: nowrap; pointer-events: none; }
@@ -338,16 +339,16 @@ body.reduced .legend-panel .t2 { display: block; }
     </ul>
     <h4>Connections</h4>
     <ul>
-      <li><svg viewBox="0 0 20 20"><path d="M2 10h14M12.5 6.5 16 10l-3.5 3.5"/></svg>A connection from the team notes; the arrow points from one to the other</li>
+      <li><svg viewBox="0 0 20 20"><path d="M2 10h14M12.5 6.5 16 10l-3.5 3.5"/></svg>A connection between two entries; the arrow points from one to the other</li>
       <li><svg viewBox="0 0 20 20"><path d="M2 10h16" class="rose"/></svg>Connections of the one you selected</li>
     </ul>
     <h4>Ripple of influence</h4>
     <ul>
-      <li><span class="lg-badge">1</span>How many steps each story is from the one you selected</li>
+      <li><span class="lg-badge">1</span>How many steps each entry is from the one you selected</li>
     </ul>
     <h4>Time</h4>
-    <p class="t3">Time runs in depth: recent years are in front, older ones further back.</p>
-    <p class="t2">Time runs left to right, from older to more recent.</p>
+    <p class="t3">Time runs in depth: recent years are in front, older ones further back. About 30 years show at a time, and the corner gives their range.</p>
+    <p class="t2">Time runs left to right, from older to more recent. The corner gives the range of years on screen.</p>
   </div>
   <button class="legend-btn" id="legend-btn" aria-expanded="false" aria-controls="legend-panel">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M8 7.2v4M8 4.8v.1" stroke-linecap="round"/></svg>

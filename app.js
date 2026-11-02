@@ -884,6 +884,7 @@ const legendEl = document.getElementById('legend'), legendBtn = document.getElem
 function setLegend(open) {
   legendEl.classList.toggle('open', open);
   legendBtn.setAttribute('aria-expanded', String(open));
+  document.body.classList.toggle('legend-open', open);   // the open panel sits where the years in view are
   chrome = null;                                       // labels make room for the open panel
 }
 legendBtn.onclick = () => setLegend(!legendEl.classList.contains('open'));
