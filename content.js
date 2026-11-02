@@ -59,7 +59,13 @@ export async function loadContent() {
   const nodes = [], byName = new Map();
   for (const r of raw.entries) {
     const name = r['Name'];
-    if (!name || !yes(r['Show on map']) || byName.has(name.toLowerCase())) continue;
+    if (!name || !yes(r['Show on map'])) continue;
+    const first = byName.get(name.toLowerCase());
+    if (first) {                                       // a name that repeats adds its text and sources to the first row's card
+      if (r['Body']) first.text = [first.text, r['Body']].filter(Boolean).join('\n\n');
+      if (r['Source'] && !(first.source || '').includes(r['Source'])) first.source = [first.source, r['Source']].filter(Boolean).join('\n');
+      continue;
+    }
     const n = {
       id: slug(name), name,
       type: /event/i.test(r['Type']) ? 'event' : 'person',
@@ -104,7 +110,7 @@ export async function loadContent() {
 function layout(nodes, links) {
   const events = nodes.filter(n => n.type === 'event').sort((a, b) => a.year - b.year);
   // The first event sits in the middle; later ones step around it so their rings don't sit on top of each other
-  events.forEach((e, i) => { const a = i * 2.1, d = i ? 38 : 0; e.x = Math.cos(a) * d; e.y = Math.sin(a) * d * 0.7; });
+  events.forEach((e, i) => { const a = i * 2.4, d = i ? 38 : 0; e.x = Math.cos(a) * d; e.y = Math.sin(a) * d * 0.7; });   // about the golden angle, so no two line up however many events there are
   const home = new Map();
   for (const n of nodes) if (n.type !== 'event') {
     const ev = links.map(l => (l.a === n.id ? l.b : l.b === n.id ? l.a : null)).map(id => events.find(e => e.id === id)).filter(Boolean);
@@ -113,7 +119,10 @@ function layout(nodes, links) {
     home.get(h).push(n);
   }
   for (const [h, people] of home) {
-    const cx = h ? h.x : 0, cy = h ? h.y : 0, r = 15 + people.length * 2.4;
-    people.forEach((p, i) => { const a = (i / people.length) * Math.PI * 2 + 0.6; p.x = cx + Math.cos(a) * r; p.y = cy + Math.sin(a) * r * 0.8; });
+    const cx = h ? h.x : 0, cy = h ? h.y : 0, r = 15 + Math.min(people.length, 14) * 2.4;
+    people.forEach((p, i) => {
+      const a = (i / people.length) * Math.PI * 2 + 0.6, ri = people.length > 14 && i % 2 ? r * 1.4 : r;   // a big group takes two rings, so it stays on screen
+      p.x = cx + Math.cos(a) * ri; p.y = cy + Math.sin(a) * ri * 0.8;
+    });
   }
 }

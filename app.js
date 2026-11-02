@@ -8,6 +8,12 @@ const { nodes, links, settings, START_YEAR, END_YEAR } = await loadContent();
 const T0 = START_YEAR - 4, T1 = END_YEAR + 2;   // the time rail runs a little past the first and last years
 // Text from the content sheet is shown as text, never as HTML
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+// One list item per source. A sheet cell holds them one per line or run together as "1. … 2. …"; *stars* mark titles.
+const sourceList = s => `<ol class="sources">${String(s).split(/\n+|\s{2,}(?=\d+\.\s)/).map(t => t.replace(/^\s*\d+\.\s+/, '').trim()).filter(Boolean).map(t =>
+  `<li>${esc(t).replace(/\*([^*]+)\*/g, '<i>$1</i>').replace(/\b(?:https?:\/\/|www\.)[^\s<]+/g, u => {
+    const url = u.replace(/[.,;)]+$/, '');
+    return `<a href="${url.startsWith('http') ? url : 'https://' + url}" target="_blank" rel="noopener">${url}</a>${u.slice(url.length)}`;
+  })}</li>`).join('')}</ol>`;
 
 /* ---------- Constants ---------- */
 const DEPTH = 2.2;                                   // world units per year (time lives on the z axis only)
@@ -240,6 +246,8 @@ nodes.forEach((n, i) => {
   // sx/sy/sr: where the shape is drawn (it breathes). lx/ly/lr: its resting spot, which the overlay layout uses so it holds still.
   items.set(n.id, { n, pos, p3, p2, group, fill, photo, line, halo, lbl, el, inner: el.firstChild, lw: 0, lh: 0, alpha: 0, phase: i * 0.7, sx: 0, sy: 0, sr: 0, lx: 0, ly: 0, lr: 0, bs: 1, vis: false, visT: -1e9, op: 0 });
 });
+
+document.fonts?.ready.then(() => { for (const it of items.values()) it.lw = 0; });   // label widths change when the web font arrives
 
 // Spread the 2D spots apart vertically (x stays the year, so time is never distorted)
 {
@@ -475,11 +483,11 @@ function renderCard() {
     <button class="name" id="name" aria-expanded="${detail}" title="${detail ? 'Show less' : 'More about ' + n.name}">${titleOf(n)}</button>
     ${subOf(n) ? `<div class="when">${subOf(n)}</div>` : ''}
     ${body}
-    ${paras.length && !detail ? `<button class="learn" id="learn" aria-expanded="false">Learn more</button>` : ''}
+    ${!detail ? `<button class="learn" id="learn" aria-expanded="false">Learn more</button>` : ''}
     ${detail ? `<dl class="facts">
       <div><dt>${n.type === 'person' ? 'Lived' : 'When'}</dt><dd>${esc(n.dates)}</dd></div>
       ${n.rests ? `<div><dt>Rests at South-View</dt><dd>${esc(n.rests)}</dd></div>` : ''}
-      <div><dt>Source</dt><dd>${esc(n.source || 'Team notes')}</dd></div>
+      <div class="wide src"><dt>Sources</dt><dd>${sourceList(n.source || 'Team notes')}</dd></div>
       ${n.credit ? `<div class="wide"><dt>Picture</dt><dd>${esc(n.credit)}</dd></div>` : ''}
     </dl>
     ${connList('', 'Connections')}
@@ -1065,7 +1073,7 @@ function tick(now) {
     const breath = calm() ? 0 : 1;
     group.scale.setScalar(it.bs * (1 + Math.sin(t * 0.45 + it.phase) * 0.02 * breath));   // a slow breath
     group.position.y = it.pos.y + Math.sin(t * 0.25 + it.phase) * 0.3 * breath;
-    it.lbl.position.copy(group.position);
+    it.lbl.position.copy(it.pos);                      // names sit at the resting spot, so they don't drift with the breath
     // Selected: one pink outline with the photo inside. Direct connections show their photo too.
     line.material.color.lerp(isSel ? C_ROSE : C_WHITE, lr(0.08));
     line.material.opacity = it.alpha;
@@ -1118,9 +1126,9 @@ function tick(now) {
   for (const it of order) {
     const { el, inner, n } = it;
     if (!it.lw) { it.lw = inner.offsetWidth; it.lh = inner.offsetHeight; }
-    const gap = it.sr * (it.n.type === 'person' ? 1.05 : 1.2) + 10;
+    const gap = Math.round(it.lr * (it.n.type === 'person' ? 1.05 : 1.2) + 10);
     inner.style.transform = `translateY(${gap}px)`;
-    const r = { x1: it.sx - it.lw / 2 - 4, x2: it.sx + it.lw / 2 + 4, y1: it.sy + gap - 2, y2: it.sy + gap + it.lh + 2 };
+    const r = { x1: it.lx - it.lw / 2 - 4, x2: it.lx + it.lw / 2 + 4, y1: it.ly + gap - 2, y2: it.ly + gap + it.lh + 2 };
     const never = it.alpha < 0.05 || (!exploring() && (n.id === selected || (!isMobile() && hops.get(n.id) === 1)));
     const blocked = taken.some(o => rectsHit(r, o))
       || discs.some(d => d !== it && rectHitsDisc(r, d.sx, d.sy, d.sr * (d.n.id === selected ? 1.4 : 1.15)));
@@ -1150,6 +1158,8 @@ function tick(now) {
 
   renderer.render(scene, camera);
   labelRenderer.render(scene, camera);
+  // The renderer places labels at fractions of a pixel, which makes their text shimmer: snap them to whole pixels
+  for (const it of items.values()) it.el.style.transform = `translate(-50%, -50%) translate(${Math.round(it.lx)}px, ${Math.round(it.ly)}px)`;
   requestAnimationFrame(tick);
 }
 

@@ -27,13 +27,15 @@ A change in the sheet shows up the next time someone opens or reloads the map.
 | Name | The name shown on the map. Connections use it, so spell it the same everywhere. | Lucius L. Lee |
 | Type | `Person` or `Event` | Person |
 | Dates | Shown next to the name. Write "Dates unknown" rather than guess. | 1854–1915 |
-| Year on map | Where it sits on the timeline: a single year. For a person, usually the year of the event they belong to. | 1893 |
-| Body | The text from the team notes, word for word. The card shows its first lines, and "Learn more" (or "More") opens the rest. A blank line starts a new paragraph. Blank for events. | |
-| Source | Book and page. | Henderson, South-View: An African American City of the Dead, p. 46 |
+| Year on map | Where it sits on the timeline: a single year, as a plain number in every row. Google's feed drops cells that don't match the rest of the column. For a person, usually the year of the event they belong to. | 1893 |
+| Body | The text from the team notes, word for word. The card shows its first lines, and "Learn more" (or "More") opens the rest. A blank line starts a new paragraph. | |
+| Source | Each source on its own line, or numbered as `1. … 2. …`. The card lists them one by one. `*Stars*` make a title italic, and web addresses become links. | 1. Henderson, *South-View*, p. 46.  2. https://example.org/page |
 | Rests at South-View | `Yes`, or where they rest instead. Blank for events. | No, Oakland Cemetery (family plot) |
 | Picture link | A direct link to a picture, or `media/people/<file>.jpg` for a photo stored with the map (see "Pictures"). Blank means the map shows a symbol. | |
 | Picture credit | Who made it, where it's held, and that it's public domain. Shown on the card. | |
 | Show on map | `Yes` to show it, `No` to hide it without deleting it. | Yes |
+
+A name that appears on two rows makes one card: the second row's Body and Source are added to the first row's.
 
 ## The Connections tab: one row per line between two entries
 
