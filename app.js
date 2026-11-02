@@ -163,7 +163,7 @@ function loadImg(src) {
 function drawCover(x, im, w, h) {
   const sc = Math.max(w / im.width, h / im.height), dw = im.width * sc, dh = im.height * sc;
   x.filter = 'grayscale(1) contrast(1.05) brightness(.9)';
-  x.drawImage(im, (w - dw) / 2, (h - dh) / 2, dw, dh);
+  x.drawImage(im, (w - dw) / 2, (h - dh) * (dh > h ? 0.15 : 0.5), dw, dh);   // a tall picture keeps its top, where a portrait's face is
   x.filter = 'none';
 }
 const texCache = new Map();
