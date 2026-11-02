@@ -90,10 +90,7 @@ body.still .card, body.still .arrow, body.still .badge, body.still .rip-svg * { 
 .card .more-cue { margin-left: auto; padding: 3px 11px; border: 1px solid var(--hair); border-radius: 999px; font-size: 12px; font-weight: 400; font-style: italic; letter-spacing: 0; text-transform: none; color: var(--grey); transition: border-color .3s, color .3s; }
 .card .more-cue:hover { border-color: rgba(212,60,103,.6); color: var(--white); }
 .card .when { font-size: 16px; font-style: italic; color: var(--grey); }
-.inc-note { margin-top: 10px; padding: 8px 11px; border: 1px dashed rgba(242,242,240,.4); border-radius: 8px; font-size: 13px; line-height: 1.4; color: #D6D6D2; }
-.inc-note b { display: block; margin-bottom: 2px; font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--white); }
-.inc-note button { padding: 0; font: inherit; font-style: italic; color: var(--white); text-decoration: underline; text-decoration-color: var(--rose); text-underline-offset: 2px; }
-.lbl .w.inc { font-style: normal; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+.card.open .inc-sign { margin: 14px 0 0; font-size: 12px; font-style: italic; color: var(--grey); }
 .card p { margin: 14px 0 0; font-size: 15px; line-height: 1.55; color: #D6D6D2; }
 /* A picture shown large: click outside it, the ×, or Esc to close */
 .lightbox { position: fixed; inset: 0; z-index: 40; display: none; align-items: center; justify-content: center; padding: 24px; background: rgba(0,0,0,.82); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
@@ -337,7 +334,7 @@ body.reduced .legend-panel .t2 { display: block; }
     <ul>
       <li><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/></svg>A person</li>
       <li><svg viewBox="0 0 20 20"><rect x="3.5" y="3.5" width="13" height="13"/></svg>An event</li>
-      <li><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke-dasharray="3 2.5"/></svg>Incomplete: its story, dates or sources are still being gathered</li>
+      <li><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke-dasharray="3 2.5"/></svg>Still being researched</li>
       <li><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" class="rose"/></svg>The one you selected</li>
     </ul>
     <h4>Connections</h4>

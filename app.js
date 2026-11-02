@@ -246,7 +246,7 @@ nodes.forEach((n, i) => {
 
   const el = document.createElement('div');
   el.className = 'lbl';
-  el.innerHTML = `<div class="in"><div class="n">${titleOf(n)}</div>${subOf(n) ? `<div class="w">${subOf(n)}</div>` : ''}${n.missing.length ? '<div class="w inc">Incomplete</div>' : ''}</div>`;
+  el.innerHTML = `<div class="in"><div class="n">${titleOf(n)}</div>${subOf(n) ? `<div class="w">${subOf(n)}</div>` : ''}</div>`;
   el.addEventListener('click', () => select(n.id));
   const lbl = new CSS2DObject(el);
   lbl.position.copy(pos);
@@ -491,7 +491,6 @@ function renderCard() {
     <div class="kind"><i></i>${TYPE[n.type]}<button class="more-cue" id="cue" aria-expanded="${detail}">${detail ? 'Less' : 'More'}</button></div>
     <button class="name" id="name" aria-expanded="${detail}" title="${detail ? 'Show less' : 'More about ' + n.name}">${titleOf(n)}</button>
     ${subOf(n) ? `<div class="when">${subOf(n)}</div>` : ''}
-    ${n.missing.length ? `<div class="inc-note"><b>Incomplete</b>Still needs ${new Intl.ListFormat('en').format(n.missing)}. <button id="inc-fix">Know more? Tell us</button></div>` : ''}
     ${body}
     ${!detail ? `<button class="learn" id="learn" aria-expanded="false">Learn more</button>` : ''}
     ${detail ? `<dl class="facts">
@@ -507,12 +506,13 @@ function renderCard() {
       <ul class="legend">${legend}</ul>
       <p class="reach">${reach}</p>
     </div>
-    <div class="links"><a href="${esc(settings['Learn more link'] || 'https://southviewcemetery.com/')}" target="_blank" rel="noopener">South-View's website ↗</a><button id="card-fix">Suggest a correction</button></div>`
+    <div class="links"><a href="${esc(settings['Learn more link'] || 'https://southviewcemetery.com/')}" target="_blank" rel="noopener">South-View's website ↗</a><button id="card-fix">Suggest a correction</button></div>
+    ${n.missing.length ? '<p class="inc-sign">Information may be incomplete.</p>' : ''}`
     : `<div class="rip simple"><b class="h">Ripple of influence</b><p class="reach">${reach}</p></div>
     ${isMobile() ? connList('mob-conns', 'Travel to') : ''}`}`;
   card.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { radius = +b.dataset.r; renderCard(); syncUrl(); });
   card.querySelectorAll('.conn').forEach(b => b.onclick = () => select(b.dataset.id));
-  card.querySelectorAll('#card-fix, #inc-fix').forEach(b => b.addEventListener('click', () => openFix(selected)));
+  card.querySelector('#card-fix')?.addEventListener('click', () => openFix(selected));
   card.querySelector('#name').onclick = card.querySelector('#cue').onclick = () => { detail = !detail; renderCard(); syncUrl(); };
   card.querySelector('#learn')?.addEventListener('click', () => { detail = true; renderCard(); syncUrl(); });
 }

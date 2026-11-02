@@ -46,12 +46,11 @@ async function readAll(url) {
 export const splitSources = s => String(s || '').split(/\n+|\s{2,}(?=\d+\.\s)/).map(t => t.replace(/^\s*\d+\.\s+/, '').trim()).filter(Boolean);
 const NEEDS_SOURCES = { event: 3, person: 1 };
 
-// What an entry still lacks, in plain words. Nothing is hidden for being incomplete: the map says so instead.
+// What an entry still lacks. Nothing is hidden for being incomplete: it gets a dashed outline and a line on its open card.
 function missingFrom(n) {
   const missing = [], need = NEEDS_SOURCES[n.type] ?? 1;
   const have = splitSources(n.source).filter(s => !/^team notes\.?$/i.test(s)).length;
   if (!n.text.trim()) missing.push(n.type === 'event' ? 'a written history' : 'a written story');
-  if (!n.dates || /unknown/i.test(n.dates)) missing.push('dates');
   if (have < need) missing.push(need > 1 ? `${need - have} more source${need - have > 1 ? 's' : ''}` : 'a source');
   return missing;
 }
