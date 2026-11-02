@@ -16,7 +16,7 @@ const sourceList = s => `<ol class="sources">${splitSources(s).map(t =>
   })}</li>`).join('')}</ol>`;
 
 /* ---------- Constants ---------- */
-const DEPTH = 5;                                     // world units per year (time lives on the z axis only)
+const DEPTH = 3.6;                                   // world units per year (time lives on the z axis only)
 const Z = year => (year - START_YEAR) * DEPTH;       // later years sit further forward, nearer the viewer
 const YEAR_AT = z => START_YEAR + z / DEPTH;
 const WHITE = 0xF2F2F0, ROSE = 0xD43C67;
@@ -68,7 +68,7 @@ function hopsFrom(id) {
 const stage = document.getElementById('stage');
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
-const FOG = new THREE.FogExp2(0x000000, 0.003);   // the flat 2D graph has no depth, so no fog
+const FOG = new THREE.FogExp2(0x000000, 0.0036);   // the flat 2D graph has no depth, so no fog
 scene.fog = FOG;
 
 const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.5, 3000);
