@@ -32,7 +32,7 @@ A change in the sheet shows up the next time someone opens or reloads the map.
 | Source | Each source on its own line, or numbered as `1. … 2. …`. The card lists them one by one. `*Stars*` make a title italic, and web addresses become links. | 1. Henderson, *South-View*, p. 46.  2. https://example.org/page |
 | Rests at South-View | `Yes`, or where they rest instead. Blank for events. | No, Oakland Cemetery (family plot) |
 | Picture link | A direct link to a picture, or `media/people/<file>.jpg` for a photo stored with the map (see "Pictures"). Blank means the map shows a symbol. | |
-| Picture credit | Who made it, where it's held, and that it's public domain. Shown on the card. | |
+| Picture credit | Who or what it shows, who made it, where it's held, and that it's public domain, ending with the web address of its source. Shown on the card, and the address becomes a link. Name people in full here: the caption stops at the first ". ". | |
 | Show on map | `Yes` to show it, `No` to hide it without deleting it. | Yes |
 
 A name that appears on two rows makes one card: the second row's Body and Source are added to the first row's.

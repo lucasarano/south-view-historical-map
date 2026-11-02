@@ -8,12 +8,14 @@ const { nodes, links, settings, START_YEAR, END_YEAR } = await loadContent();
 const T0 = START_YEAR - 4, T1 = END_YEAR + 2;   // the time rail runs a little past the first and last years
 // Text from the content sheet is shown as text, never as HTML
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+// Web addresses in already-escaped text become links
+const withLinks = html => html.replace(/\b(?:https?:\/\/|www\.)[^\s<]+/g, u => {
+  const url = u.replace(/[.,;)]+$/, '');
+  return `<a href="${url.startsWith('http') ? url : 'https://' + url}" target="_blank" rel="noopener">${url}</a>${u.slice(url.length)}`;
+});
 // One list item per source; *stars* mark titles
 const sourceList = s => `<ol class="sources">${splitSources(s).map(t =>
-  `<li>${esc(t).replace(/\*([^*]+)\*/g, '<i>$1</i>').replace(/\b(?:https?:\/\/|www\.)[^\s<]+/g, u => {
-    const url = u.replace(/[.,;)]+$/, '');
-    return `<a href="${url.startsWith('http') ? url : 'https://' + url}" target="_blank" rel="noopener">${url}</a>${u.slice(url.length)}`;
-  })}</li>`).join('')}</ol>`;
+  `<li>${withLinks(esc(t).replace(/\*([^*]+)\*/g, '<i>$1</i>'))}</li>`).join('')}</ol>`;
 
 /* ---------- Constants ---------- */
 const DEPTH = 3.6;                                   // world units per year (time lives on the z axis only)
@@ -497,7 +499,7 @@ function renderCard() {
       <div><dt>${n.type === 'person' ? 'Lived' : 'When'}</dt><dd>${esc(n.dates)}</dd></div>
       ${n.rests ? `<div><dt>Rests at South-View</dt><dd>${esc(n.rests)}</dd></div>` : ''}
       <div class="wide src"><dt>Sources</dt><dd>${sourceList(n.source || 'Team notes')}</dd></div>
-      ${n.credit ? `<div class="wide"><dt>Picture</dt><dd>${esc(n.credit)}</dd></div>` : ''}
+      ${n.credit ? `<div class="wide"><dt>Picture</dt><dd>${withLinks(esc(n.credit))}</dd></div>` : ''}
     </dl>
     ${connList('', 'Connections')}
     <div class="rip">
@@ -878,7 +880,7 @@ function openLightbox(n) {
   const img = lightbox.querySelector('img');
   img.src = n.picture; img.alt = n.name;
   lightbox.querySelector('.lb-name').textContent = n.name;
-  lightbox.querySelector('.lb-credit').textContent = n.credit || '';
+  lightbox.querySelector('.lb-credit').innerHTML = withLinks(esc(n.credit || ''));
   lightbox.classList.add('open');
   lightbox.querySelector('.lb-close').focus();
 }
