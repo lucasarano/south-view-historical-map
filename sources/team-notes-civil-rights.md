@@ -183,7 +183,7 @@ Under segregation, a Black family driving through the South could be turned away
 * **Ruby Doris Smith-Robinson (1942–1967)** grew up in Atlanta's Summerhill neighborhood and became active in the movement while still a teenager (pg. 238). As a Spelman College student she took part in the sit-ins (pg. 238). After a "jail, no bail" protest in South Carolina, she and other students served thirty days, including time on a chain gang, and during the Freedom Rides she served forty-five days in Mississippi's Parchman Penitentiary (pg. 238). She organized chapters of the Student Nonviolent Coordinating Committee (SNCC) and became the first and only woman to serve as its executive secretary (pg. 238). Her health failed, and she died of cancer at twenty-five (pg. 238). Her epitaph at South-View reads, "If you think free, you are free" (pg. 238).
   * Sources: Henderson, p. 238.
 
-* **Julian Bond (1940–2015)** became a student protest leader while attending Morehouse College, and in 1960 he helped organize the Student Nonviolent Coordinating Committee (SNCC), serving as its first communications director (pg. 177). Atlanta voters elected him to the Georgia House of Representatives in 1965, but in January 1966 the House voted to bar him from his seat because he supported SNCC's statement against the Vietnam War; the U.S. Supreme Court ruled unanimously in December 1966 that the House had violated his right to free speech, and he took his seat (*Bond v. Floyd*). He later served in the Georgia Senate, co-founded the Southern Poverty Law Center and served as its president, and led the NAACP, first as president of its Atlanta branch and later as chairman of the national organization (pg. 177). He was also a television commentator, newspaper columnist, poet, and college professor (pg. 177). He is remembered at South-View, where a marker carries his epitaph, "Easily Amused Race Man," near his parents, educator Horace Mann Bond and librarian Julia Washington Bond (pg. 177).
+* **Julian Bond (1940–2015)** became a student protest leader while attending Morehouse College, and in 1960 he helped organize the Student Nonviolent Coordinating Committee (SNCC), serving as its first communications director (pg. 177). Atlanta voters elected him to the Georgia House of Representatives in 1965, but in January 1966 the House voted to bar him from his seat because he supported SNCC's statement against the Vietnam War; the U.S. Supreme Court ruled unanimously in December 1966 that the House had violated his right to free speech, and he took his seat (*Bond v. Floyd*). He later served in the Georgia Senate, co-founded the Southern Poverty Law Center and served as its president, and led the NAACP, first as president of its Atlanta branch and later as chairman of the national organization (pg. 177). He was also a television commentator, newspaper columnist, poet, and college professor (pg. 177). He is remembered at South-View, where a marker carries his epitaph, "Easily Amused Race Man." His parents, educator Horace Mann Bond and librarian Julia Washington Bond, also rest at South-View (pg. 177).
   * Sources: Henderson, p. 177; *Bond v. Floyd*, 385 U.S. 116 (1966).
   * Sheet: Rests at South-View = "Memorial at South-View" (not "Yes") until Ms. Hemphill confirms.
 
@@ -232,7 +232,7 @@ Other notes:
 * Image lead: Atlanta Journal-Constitution photograph of Borders and other ministers boarding the bus, January 9, 1957 (Georgia State University Special Collections, CRDL record gsu_ajc_5944). Rights must be cleared with GSU before use.
 * Ask Ms. Hemphill after the deadline: John Harden's death year (Henderson 1979, tour handout 1964) and whether South-View holds Julian Bond's remains or a memorial marker.
 
-## For the content sheet (not for the cards)
+## For the content sheet (not for the cards) · written to the Sheet 2026-11-02
 
 | Name | Type | Dates | Year on map | Rests at South-View |
 |---|---|---|---|---|
@@ -261,21 +261,22 @@ Other notes:
 |---|---|---|
 | Triple L Movement | part of | Civil Rights Movement |
 | Atlanta Student Movement | part of | Civil Rights Movement |
+| Dr. King Laid to Rest at South-View | part of | Civil Rights Movement |
 | William Holmes Borders | led | Triple L Movement |
 | William Holmes Borders | advised the students of | Atlanta Student Movement |
 | Samuel W. Williams | was a plaintiff in the bus case of | Triple L Movement |
-| Samuel W. Williams | was the first husband of Billye Aaron, who later married | Hank Aaron |
+| Samuel W. Williams | whose widow, Billye, later married | Hank Aaron |
 | Fred C. Bennette Jr. | led the Rich's campaign in | Atlanta Student Movement |
 | Ruby Doris Smith-Robinson | sat in with | Atlanta Student Movement |
-| Jesse Hill Jr. | launched the *Atlanta Inquirer* during | Atlanta Student Movement |
+| Jesse Hill Jr. | launched the Atlanta Inquirer during | Atlanta Student Movement |
 | Jesse Hill Jr. | later led the company founded by | Alonzo Herndon |
 | Herman J. Russell | paid bail for activists jailed in | Civil Rights Movement |
-| Herman J. Russell | followed as the Metro Atlanta Chamber's Black president | Jesse Hill Jr. |
+| Herman J. Russell | became the Metro Atlanta Chamber's second Black president after | Jesse Hill Jr. |
 | A.D. Williams King | was arrested in | Atlanta Student Movement |
 | A.D. Williams King | son of | Martin Luther King Sr. |
 | Martin Luther King Sr. | married | Alberta Williams King |
-| Martin Luther King Sr. | was later laid in the crypt from | Dr. King Laid to Rest at South-View |
-| Alberta Williams King | was later laid in the crypt from | Dr. King Laid to Rest at South-View |
+| Martin Luther King Sr. | was later laid in the crypt first used in | Dr. King Laid to Rest at South-View |
+| Alberta Williams King | was later laid in the crypt first used in | Dr. King Laid to Rest at South-View |
 | Martin Luther King Sr. | led a 1936 voting-rights march before | Civil Rights Movement |
 | Julian Bond | helped organize SNCC during | Atlanta Student Movement |
 | John Lewis | led SNCC during | Civil Rights Movement |
