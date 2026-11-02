@@ -4,6 +4,8 @@ When the team notes don't say where a person is buried, the card says "Rests at 
 
 **Stated in the team notes:** John Render, Robert Grant, Albert Watts, Mitchell Cargile, Lucius L. Lee, David T. Howard, Will Richardson, Milton Risdon.
 
-**Assumed (the notes don't say):** Charles H. Morgan, George W. Graham, Nicodemus Holmes, George Washington, James Harrison, George Union Wilder, Frank Smith, Samuel F. Ware, Irene Dobbs Jackson.
+**Assumed (the notes don't say):** Charles H. Morgan, George W. Graham, Nicodemus Holmes, George Washington, James Harrison, George Union Wilder, Frank Smith, Samuel F. Ware.
+
+**Confirmed by a source other than the notes:** Irene Dobbs Jackson (Henderson, *South-View*, pp. 129, 216; checked 2026-11-01, see [team-notes-check.md](../../sources/team-notes-check.md) #5).
 
 The content sheet first had a column marking each "Yes" as stated or assumed. It was removed on 2026-10-21 to keep the sheet simple, so this list is now the record. When a burial record turns up, fix the sheet and move the name here.
