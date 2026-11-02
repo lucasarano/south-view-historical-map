@@ -894,7 +894,7 @@ function setLegend(open) {
 }
 legendBtn.onclick = () => setLegend(!legendEl.classList.contains('open'));
 
-/* ---------- Corrections: anyone can ask for a fix. In this prototype nothing is sent anywhere. ---------- */
+/* ---------- Corrections: anyone can ask for a fix, through the form linked in Settings ---------- */
 const fixEl = document.getElementById('fix'), fixAbout = document.getElementById('fix-about');
 fixAbout.innerHTML = '<option value="">The map in general</option>' + nodes.slice().sort((a, b) => a.year - b.year).map(n => `<option value="${n.id}">${esc(n.name)} (${esc(dateOf(n))})</option>`).join('');
 const formLink = settings['Corrections form link'];

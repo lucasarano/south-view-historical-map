@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<title>South-View Historical Map · Prototype</title>
+<title>South-View Historical Map</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <style>
 @font-face { font-family: 'Libron'; font-weight: 400; src: url(fonts/Libron-Regular.woff2) format('woff2'); }
@@ -44,8 +44,6 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .word .mk { width: 40px; height: 40px; margin-right: 4px; }
 .word b { font-weight: 700; font-size: 20px; letter-spacing: .02em; }
 .word span { font-style: italic; font-size: 16px; color: var(--grey); }
-.tag { margin-left: auto; font-size: 15px; font-style: italic; color: #C9C9C5; display: flex; align-items: center; gap: 10px; }
-.tag i { width: 8px; height: 8px; border-radius: 50%; background: var(--rose); display: inline-block; flex: none; }
 
 /* Floating index */
 .index { position: fixed; top: 76px; left: 22px; bottom: 22px; width: 300px; z-index: 6; display: flex; flex-direction: column;
@@ -275,7 +273,6 @@ body.reduced .legend-panel .t2 { display: block; }
   .word .mk { width: 30px; height: 30px; }
   .word b { font-size: 16px; }
   .word span { display: none; }
-  .tag { position: fixed; top: 54px; right: 12px; left: 12px; justify-content: flex-end; font-size: 12px; margin: 0; }
   .motion { height: 34px; padding: 0 10px; }
   .motion span { display: none; }
   .fix-link { display: none; }
@@ -321,7 +318,6 @@ body.reduced .legend-panel .t2 { display: block; }
     <span>Reduce motion</span>
   </button>
   <div class="word"><img class="mk" src="logo/mark-dark.svg" alt=""><b>South-View</b><span>Historical Map</span></div>
-  <div class="tag"><i></i>Prototype</div>
 </div>
 
 <aside class="index" id="index" aria-label="Index of people and events">
@@ -382,7 +378,7 @@ body.reduced .legend-panel .t2 { display: block; }
     <label><span>Your name and connection <i>optional</i></span><input id="fix-who" type="text" placeholder="e.g. descendant, researcher"></label>
     <button type="submit" class="fix-send">Send request</button>
   </form>
-  <p class="fix-done" id="fix-done">Thank you. This is a prototype, so requests aren’t sent anywhere yet.</p>
+  <p class="fix-done" id="fix-done">The corrections form isn’t connected right now, so this wasn’t sent. Please contact South-View directly.</p>
 </aside>
 
 <script type="module" src="app.js"></script>

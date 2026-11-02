@@ -4,7 +4,7 @@ A 3D map of the people, events and places connected to Historic South-View Cemet
 
 **Live:** https://south-view-historical-map.vercel.app
 
-> **Prototype.** Every person, event and connection comes from the team's research notes, quoted word for word with the page from Henderson's *South-View: An African American City of the Dead*. South-View keeps the content up to date in a Google Sheet: see [docs/MAINTENANCE.md](docs/MAINTENANCE.md).
+> Every person, event and connection comes from the team's research notes, quoted word for word with the page from Henderson's *South-View: An African American City of the Dead*. South-View keeps the content up to date in a Google Sheet: see [docs/MAINTENANCE.md](docs/MAINTENANCE.md).
 
 ![Focus view](screenshots/focus.png)
 
