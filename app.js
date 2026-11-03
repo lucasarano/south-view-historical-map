@@ -21,8 +21,19 @@ const sourceList = s => `<ol class="sources">${splitSources(s).map(t =>
 const DEPTH = 3.6;                                   // world units per year (time lives on the z axis only)
 const Z = year => (year - START_YEAR) * DEPTH;       // later years sit further forward, nearer the viewer
 const YEAR_AT = z => START_YEAR + z / DEPTH;
-const WHITE = 0xF2F2F0, ROSE = 0xD43C67;
-const C_WHITE = new THREE.Color(WHITE), C_ROSE = new THREE.Color(ROSE);
+const ROSE = 0xD43C67;
+/* Light / dark themes. index.html sets data-theme on <html> before first paint; these are the matching scene colors.
+   fg: outlines, rails, arrowheads, stars. bg: background, fog, the fill inside each shape.
+   rib: base color of the connection ribbons (vertex colors, 0–1). starK: star brightness (dark specks are busy on paper).
+   tile/symbol: the canvas drawn inside a shape that has no photo. frame/frameLine/caption: the photo panels. mark: the logo. */
+const THEMES = {
+  dark:  { fg: 0xF2F2F0, bg: 0x000000, rib: [0.95, 0.95, 0.95], starK: 1,    tile: '#121212', symbol: '#8c8c88', frame: '#0d0d0d', frameLine: 'rgba(255,255,255,.22)', caption: '#6a6a66', mark: 'logo/mark-dark.svg',  meta: '#000000' },
+  light: { fg: 0x1A1915, bg: 0xF5F3EE, rib: [0.1, 0.1, 0.09],  starK: 0.35, tile: '#E8E5DE', symbol: '#8E8B84', frame: '#E8E5DE', frameLine: 'rgba(26,25,21,.22)',    caption: '#8E8B84', mark: 'logo/mark-light.svg', meta: '#F5F3EE' },
+};
+let theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+const TH = () => THEMES[theme];
+const WHITE = TH().fg;                                // the line color at load; applyTheme() repaints live after a switch
+const C_WHITE = new THREE.Color(WHITE), C_ROSE = new THREE.Color(ROSE);   // C_WHITE is mutable: outlines ease toward it every frame
 const R = 3;                                         // node radius
 const SIZE = { person: R, event: R * 1.3, place: R * 1.2 };   // outer radius per shape
 const SEL_SCALE = 1.7;                               // the selected shape grows to frame its photo
@@ -69,8 +80,8 @@ function hopsFrom(id) {
 /* ---------- Renderer ---------- */
 const stage = document.getElementById('stage');
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x000000);
-const FOG = new THREE.FogExp2(0x000000, 0.0036);   // the flat 2D graph has no depth, so no fog
+scene.background = new THREE.Color(TH().bg);
+const FOG = new THREE.FogExp2(TH().bg, 0.0036);   // the flat 2D graph has no depth, so no fog
 scene.fog = FOG;
 
 const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.5, 3000);
@@ -106,7 +117,8 @@ function stars(count, size, opacity) {
     p[i * 3 + 2] = Math.random() * 1400 - 600;
   }
   g.setAttribute('position', new THREE.BufferAttribute(p, 3));
-  const pts = new THREE.Points(g, new THREE.PointsMaterial({ color: WHITE, size, sizeAttenuation: false, transparent: true, opacity, depthWrite: false, fog: false }));
+  const pts = new THREE.Points(g, new THREE.PointsMaterial({ color: WHITE, size, sizeAttenuation: false, transparent: true, opacity: opacity * TH().starK, depthWrite: false, fog: false }));
+  pts.userData.baseOpacity = opacity;                 // applyTheme() rescales from this
   scene.add(pts);
   return pts;
 }
@@ -170,7 +182,7 @@ const texCache = new Map();
 function canvasTex(c) { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; }
 // Square texture shown inside the node itself
 function drawSymbol(x, type, cx, cy, size) {
-  x.strokeStyle = '#8c8c88'; x.fillStyle = '#8c8c88'; x.lineWidth = size * 0.06; x.lineCap = 'round';
+  x.strokeStyle = TH().symbol; x.fillStyle = TH().symbol; x.lineWidth = size * 0.06; x.lineCap = 'round';
   x.beginPath();
   if (type === 'person') {
     x.arc(cx, cy - size * 0.22, size * 0.17, 0, Math.PI * 2);                 // head
@@ -185,18 +197,19 @@ function drawSymbol(x, type, cx, cy, size) {
   x.stroke();
 }
 async function nodeTexture(n) {
-  const key = 'node:' + n.id;
+  const key = 'node:' + n.id, th = theme;
   if (texCache.has(key)) return texCache.get(key);
   const c = document.createElement('canvas'); c.width = c.height = 512;
   const x = c.getContext('2d');
-  x.fillStyle = '#121212'; x.fillRect(0, 0, 512, 512);
+  x.fillStyle = TH().tile; x.fillRect(0, 0, 512, 512);
   const im = n.picture ? await loadImg(n.picture) : null;
   if (im) drawCover(x, im, 512, 512); else drawSymbol(x, n.type, 256, 256, 340);
+  if (theme !== th) return nodeTexture(n);           // theme switched while the picture loaded: draw again in the new colors
   const t = canvasTex(c); texCache.set(key, t); return t;
 }
 // Captioned panel shown around the node
 async function shotTexture(src, n) {
-  const id = 'shot:' + src;
+  const id = 'shot:' + src, th = theme;
   if (texCache.has(id)) return texCache.get(id);
   await document.fonts.ready;
   const c = document.createElement('canvas'); c.width = 1024; c.height = 800;   // twice the drawing size, so edges stay crisp
@@ -204,17 +217,18 @@ async function shotTexture(src, n) {
   x.scale(2, 2);
   const IH = 340, rr = 10;
   x.save(); x.beginPath(); x.roundRect(2, 2, 508, IH - 4, rr); x.clip();
-  x.fillStyle = '#0d0d0d'; x.fillRect(0, 0, 512, IH);
+  x.fillStyle = TH().frame; x.fillRect(0, 0, 512, IH);
   const im = await loadImg(src);
   if (im) drawCover(x, im, 512, IH);
   x.restore();
-  x.strokeStyle = 'rgba(255,255,255,.22)'; x.lineWidth = 2;
+  x.strokeStyle = TH().frameLine; x.lineWidth = 2;
   x.beginPath(); x.roundRect(2, 2, 508, IH - 4, rr); x.stroke();
   // The credit is on the card in full; the panel carries its first words
   let cap = (n.credit || '').split('. ')[0];
-  x.fillStyle = '#6a6a66'; x.font = 'italic 22px Libron, Georgia, serif'; x.textAlign = 'left'; x.textBaseline = 'alphabetic';
+  x.fillStyle = TH().caption; x.font = 'italic 22px Libron, Georgia, serif'; x.textAlign = 'left'; x.textBaseline = 'alphabetic';
   while (cap && x.measureText(cap).width > 500) cap = cap.slice(0, -2).trimEnd() + '…';
   x.fillText(cap, 4, 386);
+  if (theme !== th) return shotTexture(src, n);      // same as nodeTexture: never cache a panel in the old colors
   const t = canvasTex(c); texCache.set(id, t); return t;
 }
 
@@ -225,8 +239,8 @@ nodes.forEach((n, i) => {
   const p3 = new THREE.Vector3(n.x, n.y, Z(n.year)), p2 = new THREE.Vector3(X2(n.year), n.y, 0), pos = p3;
   const group = new THREE.Group();
   group.position.copy(pos);
-  // Opaque black fill: anything behind a shape is hidden by it
-  const fill = new THREE.Mesh(FILL[n.type], new THREE.MeshBasicMaterial({ color: 0x000000 }));
+  // Opaque fill in the page color: anything behind a shape is hidden by it
+  const fill = new THREE.Mesh(FILL[n.type], new THREE.MeshBasicMaterial({ color: TH().bg }));
   fill.userData.id = n.id;
   const photo = new THREE.Mesh(PHOTO[n.type], new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
   photo.position.z = 0.01;
@@ -363,7 +377,8 @@ function updateRibbon(L, opacity, tint = 0) {
     for (let side = 0; side < 2; side++) {
       const j = k * 2 + side, sg = side ? 1 : -1;
       pos[j * 3] = vA.x + vS.x * w * sg; pos[j * 3 + 1] = vA.y + vS.y * w * sg; pos[j * 3 + 2] = vA.z + vS.z * w * sg;
-      col[j * 4] = 0.95 + (0.83 - 0.95) * tint; col[j * 4 + 1] = 0.95 + (0.24 - 0.95) * tint; col[j * 4 + 2] = 0.95 + (0.4 - 0.95) * tint; col[j * 4 + 3] = al;
+      const [br, bg, bb] = TH().rib;                   // base color (light lines on dark, ink on paper), eased toward rose by tint
+      col[j * 4] = br + (0.83 - br) * tint; col[j * 4 + 1] = bg + (0.24 - bg) * tint; col[j * 4 + 2] = bb + (0.4 - bb) * tint; col[j * 4 + 3] = al;
     }
   }
   L.mesh.geometry.attributes.position.needsUpdate = true;
@@ -388,7 +403,7 @@ function rebuildGlints() {
   glints.length = 0;
   linkObjs.forEach(L => {
     if (L.a !== selected && L.b !== selected) return;
-    const mesh = new THREE.Mesh(new THREE.CircleGeometry(0.32, 16), new THREE.MeshBasicMaterial({ color: WHITE, transparent: true, opacity: 0, depthWrite: false }));
+    const mesh = new THREE.Mesh(new THREE.CircleGeometry(0.32, 16), new THREE.MeshBasicMaterial({ color: C_WHITE, transparent: true, opacity: 0, depthWrite: false }));
     scene.add(mesh);
     glints.push({ mesh, L, offset: Math.random() });
   });
@@ -826,6 +841,35 @@ function setReduced(on, save = true) {
   if (save) { try { localStorage.setItem('svhm-reduced-motion', on ? '1' : '0'); } catch (_) {} syncUrl(); }
 }
 motionBtn.onclick = () => setReduced(!reduced);
+
+/* ---------- Light / dark theme: CSS follows data-theme on <html>; this repaints the 3D scene to match ---------- */
+const themeBtn = document.getElementById('theme');
+function applyTheme(next, save = true, init = false) {
+  theme = next;
+  const T = TH(), fg = new THREE.Color(T.fg), bg = new THREE.Color(T.bg);
+  document.documentElement.dataset.theme = next;      // every CSS token switches with this one attribute
+  document.querySelector('meta[name="theme-color"]').content = T.meta;
+  document.getElementById('mark').src = T.mark;
+  themeBtn.querySelector('span').textContent = next === 'dark' ? 'Light mode' : 'Dark mode';   // names the theme you'd switch to
+  themeBtn.setAttribute('aria-pressed', String(next === 'dark'));
+  if (init) return;                                    // at load the scene was already built in these colors
+  scene.background.copy(bg); FOG.color.copy(bg);
+  C_WHITE.copy(fg);                                    // outlines ease toward this each frame (instantly in reduced motion)
+  for (const it of items.values()) {
+    it.fill.material.color.copy(bg);
+    if (it.n.id !== selected) it.line.material.color.copy(fg);   // snap now so nothing fades across from the old color
+  }
+  railMat.color.copy(fg); rail2.material.color.copy(fg);
+  for (const L of linkObjs) L.head.material.color.copy(fg);
+  for (const s of [dust, bright]) { s.material.color.copy(fg); s.material.opacity = s.userData.baseOpacity * T.starK; }
+  rebuildGlints();
+  // Canvas textures were drawn in the old colors: drop them and redraw the ones on screen
+  for (const [k, t] of texCache) { t.dispose(); texCache.delete(k); }
+  for (const it of items.values()) { it.photo.material.map = null; it.photo.visible = false; it.photo.material.needsUpdate = true; }
+  renderShots();
+  if (save) { try { localStorage.setItem('svhm-theme', next); } catch (_) {} }
+}
+themeBtn.onclick = () => applyTheme(theme === 'dark' ? 'light' : 'dark');
 modeBtns.focus.onclick = () => setMode('focus');
 modeBtns.explore.onclick = () => setMode('explore');
 function chooseCardSide() {
@@ -1117,7 +1161,7 @@ function tick(now) {
   if (!calm()) {
     dust.rotation.z = t * 0.003;
     bright.rotation.z = -t * 0.002;
-    bright.material.opacity = 0.45 + Math.sin(t * 0.4) * 0.1;
+    bright.material.opacity = (0.45 + Math.sin(t * 0.4) * 0.1) * TH().starK;
   }
 
   updateShots(now);
@@ -1186,6 +1230,7 @@ let savedMotion = null;
 try { savedMotion = localStorage.getItem('svhm-reduced-motion'); } catch (_) {}
 const startReduced = params.get('motion') === 'reduced' || (params.get('motion') !== 'full' && (savedMotion === '1' || (savedMotion === null && matchMedia('(prefers-reduced-motion: reduce)').matches)));
 if (startReduced) setReduced(true, false);
+applyTheme(theme, false, true);                     // sync the button label and logo to the theme index.html picked
 if (skipIntro || reduced) {
   intro.remove();
   const target = items.get(selected).pos;
