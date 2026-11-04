@@ -198,7 +198,7 @@ names = {r[0] for r in rows}
 for a, _, b in CONNECTIONS:
     assert a in names and b in names, (a, b)
 CONN_COLS = ['From', 'Connection', 'To']
-SETTINGS = [['Setting', 'Value'], ['Corrections form link', 'https://docs.google.com/forms/d/e/1FAIpQLScbkWoLiCwX2orTXdWUKgRNx_vihMOkPgxnnYfkHpQqNo7rgA/viewform'], ['Learn more link', 'https://southviewcemetery.com/']]
+SETTINGS = [['Setting', 'Value'], ['Corrections form link', 'https://docs.google.com/forms/d/e/1FAIpQLSeKyaw7jHWupsJnB17tQ6wtHshDZwgVq8WDsldJQIeKMwoyQg/viewform'], ['Learn more link', 'https://southviewcemetery.com/']]
 
 out = os.path.join(ROOT, 'content'); os.makedirs(out, exist_ok=True)
 def write_csv(name, header, data):

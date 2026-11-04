@@ -2,7 +2,7 @@
 
 The map shows whatever is in one Google Sheet, the **content sheet**. Change the sheet and the map changes: no code, no redeploy. This page is the walkthrough for whoever looks after it.
 
-**Content sheet:** [South-View Historical Map – Content](https://docs.google.com/spreadsheets/d/1TmdpE1abFiaWOeoYWzv-XDwXrCuz3NShifqZV8q9DA4/edit)
+**Content sheet:** [South-View Historical Map – Content](https://docs.google.com/spreadsheets/d/1zs9d_2Ooim9acz_lMBrBX4PUA6HulEW0VwPIDCKyw4M/edit)
 
 ## How it works
 
@@ -103,7 +103,7 @@ For both kinds:
 
 ## Corrections from visitors
 
-The "Suggest a correction" buttons open the [corrections form](https://docs.google.com/forms/d/e/1FAIpQLScbkWoLiCwX2orTXdWUKgRNx_vihMOkPgxnnYfkHpQqNo7rgA/viewform) ("South-View Historical Map – Corrections form" in Drive). It asks four questions:
+The "Suggest a correction" buttons open the [corrections form](https://docs.google.com/forms/d/e/1FAIpQLSeKyaw7jHWupsJnB17tQ6wtHshDZwgVq8WDsldJQIeKMwoyQg/viewform) ("South-View Historical Map – Corrections form" in Drive). It asks four questions:
 - Which person or event?
 - What should change? (required)
 - Source, if you have one
@@ -129,7 +129,7 @@ Every answer lands in the content sheet's **Form Responses 1** tab. Read them, c
 The saved copy in `content/` is what visitors see if Google is down. Refresh it now and then, for example before a presentation:
 
 ```bash
-for tab in Entries Connections Settings; do curl -sL "https://docs.google.com/spreadsheets/d/1TmdpE1abFiaWOeoYWzv-XDwXrCuz3NShifqZV8q9DA4/gviz/tq?tqx=out:csv&headers=1&sheet=$tab" -o "content/$(echo $tab | tr A-Z a-z).csv"; done
+for tab in Entries Connections Settings; do curl -sL "https://docs.google.com/spreadsheets/d/1zs9d_2Ooim9acz_lMBrBX4PUA6HulEW0VwPIDCKyw4M/gviz/tq?tqx=out:csv&headers=1&sheet=$tab" -o "content/$(echo $tab | tr A-Z a-z).csv"; done
 ```
 
 Then commit and deploy as usual. To test the saved copy in the browser, add `?content=saved` to the map's address.

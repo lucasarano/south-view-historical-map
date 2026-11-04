@@ -2,7 +2,7 @@
 // If the sheet can't be read, the map uses the saved copy in content/ instead, so it never shows up empty.
 // Add ?content=saved to the address to skip the sheet and test the saved copy.
 
-export const SHEET_ID = '1TmdpE1abFiaWOeoYWzv-XDwXrCuz3NShifqZV8q9DA4';
+export const SHEET_ID = '1zs9d_2Ooim9acz_lMBrBX4PUA6HulEW0VwPIDCKyw4M';
 const fromSheet = tab => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(tab)}`;
 const fromSaved = tab => `content/${tab.toLowerCase()}.csv`;
 
